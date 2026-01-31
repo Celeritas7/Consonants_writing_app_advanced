@@ -1,0 +1,372 @@
+;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.daily-target-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.session-progress-bar {
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.session-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.session-progress-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.session-progress-text .value {
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+/* Quiz Grid Cell */
+.quiz-grid-cell {
+    position: relative;
+}
+
+.quiz-grid-cell.correct-answer::after {
+    content: '✓';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: var(--accent-green);
+}
+
+.quiz-grid-cell.incorrect-answer::after {
+    content: '✗';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: var(--accent-red);
+}
+
+/* Practice Sheet Styles */
+.sheet-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.sheet-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.sheet-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    background: var(--border-color);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sheet-cell {
+    background: #fefefe;
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.sheet-cell-label {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 0.7rem;
+    color: #666;
+    font-family: 'Noto Sans Devanagari', sans-serif;
+}
+
+.sheet-cell-checkbox {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    background: white;
+}
+
+.sheet-cell-checkbox.checked {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+.sheet-cell-checkbox.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.sheet-cell-char {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: rgba(200, 200, 200, 0.4);
+    padding-top: 1rem;
+}
+
+.sheet-cell-char.hide-guide {
+    color: transparent;
+}
+
+/* Review Chart Styles */
+.review-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.review-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.review-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.review-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.legend-color.strong { background: #22c55e; }
+.legend-color.good { background: #86efac; }
+.legend-color.medium { background: #fbbf24; }
+.legend-color.weak { background: #f97316; }
+.legend-color.very-weak { background: #ef4444; }
+.legend-color.not-attempted { background: #e5e5e5; }
+
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.review-cell {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.review-cell:hover {
+    transform: scale(1.05);
+    border-color: var(--accent-blue);
+}
+
+.review-cell.strong { background: #22c55e; color: white; }
+.review-cell.good { background: #86efac; color: #166534; }
+.review-cell.medium { background: #fbbf24; color: #92400e; }
+.review-cell.weak { background: #f97316; color: white; }
+.review-cell.very-weak { background: #ef4444; color: white; }
+.review-cell.not-attempted { background: #e5e5e5; color: #666; }
+
+.review-cell-char {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.review-cell-stats {
+    font-size: 0.7rem;
+    margin-top: 4px;
+    opacity: 0.9;
+}
+
+.review-cell-devanagari {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.review-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+    border: 1px solid var(--border-color);
+}
+
+.review-cell:hover .review-tooltip {
+    opacity: 1;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+/* Font classes */
+.burmese { font-family: 'Noto Sans Myanmar', sans-serif; }
+.devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
+.japanese { font-family: 'Noto Sans JP', sans-serif; }
+.korean { font-family: 'Noto Sans KR', sans-serif; }
+.chinese { font-family: 'Noto Sans SC', sans-serif; }
+.telugu { font-family: 'Noto Sans Telugu', sans-serif; }
+
+/* Print styles */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    .bg-pattern, header, .language-tabs, .stats-bar, .main-tabs, 
+    .sheet-header, .review-header, .review-legend {
+        display: none !important;
+    }
+    .sheet-container, .review-container {
+        background: white;
+        border: none;
+        padding: 0;
+    }
+    .sheet-grid {
+        border: 2px solid black;
+    }
+    .sheet-cell {
+        border: 1px solid #ccc;
+    }
+    .review-grid {
+        gap: 4px;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .target-char {
+        font-size: 5rem;
+    }
+
+    .practice-area {
+        gap: 1rem;
+    }
+
+    .char-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .sheet-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .review-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .main-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .main-tab {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+}
