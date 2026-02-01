@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burmese Learning App</title>
+    <title>Multi-Language Consonants Practice</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -12,11 +12,11 @@
     
     <div class="container">
         <header>
-            <h1>✍️ Burmese Learning</h1>
-            <p class="subtitle">Master writing Burmese characters and words</p>
+            <h1>✍️ Consonants Practice</h1>
+            <p class="subtitle">Master writing across multiple scripts</p>
         </header>
 
-        <!-- Language Tabs (for future multi-language support) -->
+        <!-- Language Tabs -->
         <div class="language-tabs" id="languageTabs">
             <!-- Populated by JS -->
         </div>
@@ -37,27 +37,7 @@
             </div>
         </div>
 
-        <!-- Main Study Level Tabs -->
-        <div class="study-level-tabs">
-            <button class="study-tab active" data-level="consonant">
-                <span class="tab-icon">က</span>
-                <span class="tab-label">C (Consonants)</span>
-            </button>
-            <button class="study-tab" data-level="cv">
-                <span class="tab-icon">ကာ</span>
-                <span class="tab-label">C+V (Combinations)</span>
-            </button>
-            <button class="study-tab" data-level="word">
-                <span class="tab-icon">စကား</span>
-                <span class="tab-label">Word</span>
-            </button>
-            <button class="study-tab disabled" data-level="sentence" title="Coming soon">
-                <span class="tab-icon">📝</span>
-                <span class="tab-label">Sentence</span>
-            </button>
-        </div>
-
-        <!-- Mode Tabs (Practice/Quiz/Sheet/Review) -->
+        <!-- Main Tabs -->
         <div class="main-tabs">
             <button class="main-tab active" data-view="practice">✏️ Practice</button>
             <button class="main-tab" data-view="quiz">🧠 Quiz</button>
@@ -65,7 +45,7 @@
             <button class="main-tab" data-view="review">📊 Review</button>
         </div>
 
-        <!-- ========== PRACTICE VIEW ========== -->
+        <!-- Practice View -->
         <div class="practice-view active" id="practiceView">
             <!-- Mode Toggle -->
             <div class="mode-toggle">
@@ -74,44 +54,15 @@
                 <button class="mode-btn" data-mode="unpracticed">Unpracticed Only</button>
             </div>
 
-            <!-- Word Level Filter (shown only for word level) -->
-            <div class="word-filters" id="wordFilters" style="display: none;">
-                <div class="filter-group">
-                    <label>Group by:</label>
-                    <select id="wordGroupBy">
-                        <option value="anchor">Anchor Words</option>
-                        <option value="consonant">Consonant</option>
-                        <option value="category">Category</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Anchor:</label>
-                    <select id="anchorFilter">
-                        <option value="">All Anchors</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Category:</label>
-                    <select id="categoryFilter">
-                        <option value="">All Categories</option>
-                    </select>
-                </div>
-            </div>
-
             <!-- Main Practice Area -->
             <div class="practice-area">
                 <!-- Character Display -->
                 <div class="character-panel fade-in">
-                    <div class="canvas-title" id="practiceTitle">Current Character</div>
-                    <div class="target-char burmese" id="targetChar">က</div>
+                    <div class="canvas-title">Current Character</div>
+                    <div class="target-char" id="targetChar">က</div>
                     <div class="char-info">
-                        <div class="romanization devanagari" id="romanization">क</div>
+                        <div class="romanization" id="romanization">ka</div>
                         <div id="charDescription">Consonant 1 of 33</div>
-                        <!-- Word meaning (shown for word level) -->
-                        <div class="word-meaning" id="wordMeaning" style="display: none;">
-                            <div class="meaning-text" id="meaningText"></div>
-                            <div class="hint-text" id="hintText"></div>
-                        </div>
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn" id="prevBtn">←</button>
@@ -166,7 +117,7 @@
             </div>
         </div>
 
-        <!-- ========== QUIZ VIEW ========== -->
+        <!-- Quiz View -->
         <div class="quiz-view" id="quizView">
             <!-- Daily Target Section -->
             <div class="daily-target-section">
@@ -216,7 +167,7 @@
                     <!-- Answer Reveal -->
                     <div class="answer-reveal" id="answerReveal">
                         <div class="answer-label">Correct Answer:</div>
-                        <div class="answer-char burmese" id="answerChar">က</div>
+                        <div class="answer-char" id="answerChar">က</div>
                         <div class="result-buttons">
                             <button class="result-btn incorrect" id="markIncorrect">✗ Wrong</button>
                             <button class="result-btn correct" id="markCorrect">✓ Correct</button>
@@ -267,11 +218,11 @@
             </div>
         </div>
 
-        <!-- ========== PRACTICE SHEET VIEW ========== -->
+        <!-- Practice Sheet View -->
         <div class="sheet-view" id="sheetView">
             <div class="sheet-container">
                 <div class="sheet-header">
-                    <div class="sheet-title">📝 Practice Sheet</div>
+                    <div class="sheet-title">📝 Blank Practice Sheet</div>
                     <div class="sheet-actions">
                         <div class="guide-toggle" style="margin: 0;">
                             <label class="toggle-switch">
@@ -289,7 +240,7 @@
             </div>
         </div>
 
-        <!-- ========== REVIEW CHART VIEW ========== -->
+        <!-- Review Chart View -->
         <div class="review-view" id="reviewView">
             <div class="review-container">
                 <div class="review-header">
@@ -328,32 +279,6 @@
                 <div class="review-grid" id="reviewGrid">
                     <!-- Populated by JS -->
                 </div>
-            </div>
-        </div>
-
-        <!-- Connection Status -->
-        <div class="connection-status" id="connectionStatus">
-            <span class="status-dot"></span>
-            <span class="status-text">Offline Mode</span>
-        </div>
-    </div>
-
-    <!-- Supabase Config Modal -->
-    <div class="modal" id="supabaseModal" style="display: none;">
-        <div class="modal-content">
-            <h3>🔗 Connect to Supabase</h3>
-            <p>Enter your Supabase credentials to enable Word learning from database:</p>
-            <div class="form-group">
-                <label>Project URL:</label>
-                <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co">
-            </div>
-            <div class="form-group">
-                <label>Anon Key:</label>
-                <input type="text" id="supabaseKey" placeholder="eyJ...">
-            </div>
-            <div class="modal-actions">
-                <button class="action-btn secondary" onclick="closeSupabaseModal()">Cancel</button>
-                <button class="action-btn primary" onclick="connectSupabase()">Connect</button>
             </div>
         </div>
     </div>

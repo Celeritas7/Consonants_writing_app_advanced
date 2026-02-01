@@ -1,0 +1,31 @@
+Now go ahead and please generate the app file for me which will use this database structure.
+
+Also I had few questions, No need to implement these in the app as of now. can you answer them parallelly?
+1. If in future I will have more than one sentence for a word how it will be stored? Should I generate a new database for the sentences only which will generate the supporting words inside my app? Either way I'm going to generate the sentence database in future for my grammar app for Japanese and Burmese.
+2. Can I create a script which will assign the sentence to words for which sentences are not assigned? The words for which sentences are going to assign should be found from the sentence only.
+For example,
+If I have Sentence, ကျွန်တော် ထမင်း စားတယ်။
+I should automatically get assigned to words, ကျွန်, တော်, ထမင်း, စား
+But this should avoid the ending particals like, "တယ်" as they are always common.
+
+
+3. Is there any possibility that I can combine the different languages like Burmese, Odiya, Telugu consonents, vowels, sentences databases in future? What will be pros and cons of it for me?
+
+
+
+
+
+
+
+
+I have a question regarding the planning given below.
+
+1. C tab: Want to keep the current app view as consonent level study layout.
+
+2. C + V tab: And in addition to the above I want the LETTER level where the consonants + vowels (C + V tab) will be learnt. For that consider the inputs from the attached images. The responses, writing practice, mistake entries, everything else should be same as the consonent level study layout.
+
+3. Word tab: And finally I want word tab where I can learn the word writing. The word database will come from the Supabase database which I will make for Burmese study later. It dowesnt exist currently.
+
+4. Sentence tab will be generated in later updates.
+
+The achor word table will also be there which will help me remember and memorise the Burmese words even if Im not native person.

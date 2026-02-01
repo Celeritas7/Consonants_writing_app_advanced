@@ -1,0 +1,71 @@
+name,source,display_order
+Colours,kg_book,1
+Animals,kg_book,2
+Food,kg_book,3
+Vegetables,kg_book,4
+Fruits,kg_book,5
+Transportation,kg_book,6
+Shopping,kg_book,7
+Hotel,kg_book,8
+Body,kg_book,9
+Date,kg_book,10
+Family,kg_book,11
+Directions,kg_book,12
+Weather,kg_book,13
+Hobby,kg_book,14
+Tableware,kg_book,15
+Seasoning,kg_book,16
+Sports,kg_book,17
+Drinks,kg_book,18
+Numbers,kg_book,19
+0-10,kg_book,20
+11-20,kg_book,21
+21-30,kg_book,22
+40-90,kg_book,23
+100-900,kg_book,24
+1000-9000,kg_book,25
+10000-90000,kg_book,26
+100000-10 trillion,kg_book,27
+LESSON - 2A,words,28
+WHAT,words,29
+WHY,words,30
+WHEN,words,31
+WHO,words,32
+WHICH,words,33
+HOW MANY,words,34
+HOW MUCH,words,35
+HOW,words,36
+WHERE,words,37
+SENTENCE PATTERNS,words,38
+EASY / DIFFICULT,words,39
+NEEDS,words,40
+WANTS,words,41
+TO BE ENOUGH,words,42
+DO,words,43
+USED UP,words,44
+REACHED DESTINATION,words,45
+BE AVAILABLE / BE READY,words,46
+DONE,words,47
+HAVE YOUR MEAL,words,48
+GO,words,49
+AFFIRMATIVE,words,50
+GOOD,words,51
+GREETINGS,words,52
+LESSON 2B: PART 1,words,53
+PART 2,words,54
+PART 3,words,55
+PART 4,words,56
+Burmese Favourite,recipes,57
+Various cuisines,recipes,58
+Snacks,recipes,59
+Appetizers,recipes,60
+"Rice, Noodles",recipes,61
+"Chicken & Duck (Lunch, Dinner)",recipes,62
+"Beef & Mutton (Lunch, Dinner)",recipes,63
+"Pork (Lunch, Dinner)",recipes,64
+"Seafood (Lunch, Dinner)",recipes,65
+Sauce and Side Dishes,recipes,66
+"Vegetables (Lunch, Dinner)",recipes,67
+"Soup (Lunch, Dinner)",recipes,68
+Dessert & Sweets,recipes,69
+Drinks & beverages,recipes,70

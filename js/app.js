@@ -1,806 +1,882 @@
-// Main Application Module
-
-import { languages, getLanguage } from './languages/index.js';
-import { loadState, saveState, updateState } from './storage.js';
+// Main Application - Burmese Learning App
+import { burmese } from './languages/burmese.js';
 import { DrawingCanvas } from './canvas.js';
+import * as storage from './storage.js';
 
-// App State
-let state = loadState();
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+let currentLanguage = burmese;
+let currentLevel = 'consonant'; // consonant, cv, word
+let currentView = 'practice';
+let currentIndex = 0;
+let currentData = []; // Current items to practice
+let practiceMode = 'sequential';
+let quizMode = 'sequential';
+
+// Canvas instances
 let practiceCanvas = null;
 let quizCanvas = null;
 
-// DOM Elements cache
-const elements = {};
+// Quiz state
+let quizStats = { correct: 0, incorrect: 0, streak: 0 };
+let answerRevealed = false;
+let sessionPracticed = [];
 
-// Initialize the application
-export function init() {
-    cacheElements();
-    setupCanvases();
-    renderLanguageTabs();
-    setupEventListeners();
-    restoreView();
-    updateAllDisplays();
-}
+// Supabase data cache
+let dbWords = [];
+let dbAnchors = [];
+let dbCategories = [];
+let isConnected = false;
 
-// Cache DOM elements
-function cacheElements() {
-    elements.languageTabs = document.getElementById('languageTabs');
-    elements.practicedCount = document.getElementById('practicedCount');
-    elements.totalCount = document.getElementById('totalCount');
-    elements.progressPercent = document.getElementById('progressPercent');
+// ============================================================
+// INITIALIZATION
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load saved state
+    const appState = storage.getAppState();
+    currentLevel = appState.currentLevel || 'consonant';
+    currentView = appState.currentView || 'practice';
+    currentIndex = appState.currentIndex || 0;
+    practiceMode = appState.practiceMode || 'sequential';
     
-    // Practice view elements
-    elements.targetChar = document.getElementById('targetChar');
-    elements.romanization = document.getElementById('romanization');
-    elements.charDescription = document.getElementById('charDescription');
-    elements.charGrid = document.getElementById('charGrid');
+    // Initialize UI
+    initLanguageTabs();
+    initStudyLevelTabs();
+    initMainTabs();
+    initModeToggles();
+    initCanvases();
+    initControls();
+    initWordFilters();
     
-    // Quiz view elements
-    elements.quizDevanagari = document.getElementById('quizDevanagari');
-    elements.quizRoman = document.getElementById('quizRoman');
-    elements.quizDescription = document.getElementById('quizDescription');
-    elements.answerReveal = document.getElementById('answerReveal');
-    elements.answerChar = document.getElementById('answerChar');
-    elements.quizCharGrid = document.getElementById('quizCharGrid');
-    elements.quizNavButtons = document.getElementById('quizNavButtons');
-    elements.quizCorrect = document.getElementById('quizCorrect');
-    elements.quizIncorrect = document.getElementById('quizIncorrect');
-    elements.quizStreak = document.getElementById('quizStreak');
+    // Load data for current level
+    await loadDataForLevel();
     
-    // Daily target elements
-    elements.dailyTargetInput = document.getElementById('dailyTargetInput');
-    elements.sessionProgress = document.getElementById('sessionProgress');
-    elements.sessionCount = document.getElementById('sessionCount');
-    elements.sessionTarget = document.getElementById('sessionTarget');
-    
-    // Sheet and Review elements
-    elements.sheetGrid = document.getElementById('sheetGrid');
-    elements.reviewGrid = document.getElementById('reviewGrid');
-}
-
-// Setup canvases
-function setupCanvases() {
-    practiceCanvas = new DrawingCanvas('bgCanvas', 'guideCanvas', 'drawCanvas');
-    practiceCanvas.setup();
-    
-    // Quiz canvas will be setup when quiz view is shown
-}
-
-function setupQuizCanvas() {
-    if (!quizCanvas) {
-        quizCanvas = new DrawingCanvas('quizBgCanvas', null, 'quizDrawCanvas');
-    }
-    quizCanvas.setup();
-}
-
-// Render language tabs
-function renderLanguageTabs() {
-    if (!elements.languageTabs) return;
-    
-    elements.languageTabs.innerHTML = '';
-    
-    Object.keys(languages).forEach(key => {
-        const lang = languages[key];
-        const tab = document.createElement('button');
-        tab.className = `lang-tab ${key === state.currentLang ? 'active' : ''}`;
-        tab.innerHTML = `${lang.name} <span class="native ${lang.fontClass}">${lang.native}</span>`;
-        tab.onclick = () => switchLanguage(key);
-        elements.languageTabs.appendChild(tab);
-    });
-}
-
-// Switch language
-function switchLanguage(langKey) {
-    state.currentLang = langKey;
-    state.currentIndex = 0;
-    state.quizIndex = 0;
-    state.sessionPracticed = [];
-    
-    saveState(state);
-    renderLanguageTabs();
-    updateAllDisplays();
-    
-    if (practiceCanvas) practiceCanvas.clear();
-    if (quizCanvas) quizCanvas.clear();
-    hideAnswerReveal();
-}
-
-// Restore view from saved state
-function restoreView() {
-    const view = state.currentView || 'practice';
-    switchView(view);
-}
-
-// Switch between views
-function switchView(viewName) {
-    state.currentView = viewName;
-    saveState(state);
-    
-    // Update tab buttons
-    document.querySelectorAll('.main-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.view === viewName);
-    });
-    
-    // Update view visibility
-    document.getElementById('practiceView')?.classList.toggle('active', viewName === 'practice');
-    document.getElementById('quizView')?.classList.toggle('active', viewName === 'quiz');
-    document.getElementById('sheetView')?.classList.toggle('active', viewName === 'sheet');
-    document.getElementById('reviewView')?.classList.toggle('active', viewName === 'review');
-    
-    // Setup quiz canvas when quiz view is shown
-    if (viewName === 'quiz') {
-        setTimeout(() => {
-            setupQuizCanvas();
-            updateQuizDisplay();
-        }, 100);
-    } else if (viewName === 'sheet') {
-        renderPracticeSheet();
-    } else if (viewName === 'review') {
-        renderReviewChart();
-    }
-}
-
-// Update all displays
-function updateAllDisplays() {
-    updatePracticeDisplay();
-    updateQuizDisplay();
+    // Update display
+    updateDisplay();
     updateStats();
-    renderPracticeSheet();
-    renderReviewChart();
-}
+    updateCharGrid();
+    updateSheetGrid();
+    updateReviewGrid();
+    
+    // Try to connect to Supabase
+    await tryConnectSupabase();
+});
 
-// Update practice display
-function updatePracticeDisplay() {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
+// ============================================================
+// LANGUAGE TABS
+// ============================================================
+function initLanguageTabs() {
+    const container = document.getElementById('languageTabs');
+    container.innerHTML = `
+        <button class="lang-tab active" data-lang="burmese">
+            <span class="native burmese">မြန်မာ</span>
+            <span>Burmese</span>
+        </button>
+    `;
     
-    const charData = lang.consonants[state.currentIndex];
-    if (!charData) return;
-    
-    // Update target character
-    if (elements.targetChar) {
-        elements.targetChar.textContent = charData.char;
-        elements.targetChar.className = `target-char ${lang.fontClass}`;
-    }
-    
-    // Update info
-    if (elements.romanization) {
-        elements.romanization.textContent = charData.roman;
-    }
-    
-    if (elements.charDescription) {
-        const devanagariText = charData.devanagari ? `${charData.devanagari} • ` : '';
-        elements.charDescription.textContent = `${devanagariText}Character ${state.currentIndex + 1} of ${lang.consonants.length}`;
-    }
-    
-    // Draw guide
-    if (practiceCanvas && state.showGuide) {
-        practiceCanvas.drawGuide(charData.char, lang.fontFamily, state.showGuide);
-    }
-    
-    // Update grid
-    renderCharGrid();
-}
-
-// Render character grid for practice view
-function renderCharGrid() {
-    if (!elements.charGrid) return;
-    
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    elements.charGrid.innerHTML = '';
-    
-    lang.consonants.forEach((charData, index) => {
-        const cell = document.createElement('div');
-        cell.className = `char-cell ${lang.fontClass}`;
-        
-        if (index === state.currentIndex) {
-            cell.classList.add('current');
-        } else if (isPracticed(index)) {
-            cell.classList.add('practiced');
-        } else {
-            cell.classList.add('unpracticed');
-        }
-        
-        cell.textContent = charData.char;
-        cell.onclick = () => jumpToChar(index);
-        elements.charGrid.appendChild(cell);
+    container.querySelectorAll('.lang-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            container.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            // For future multi-language support
+        });
     });
 }
 
-// Check if character is practiced
-function isPracticed(index) {
-    const key = `${state.currentLang}_${index}`;
-    return state.practicedChars[key] === true;
-}
-
-// Navigate characters
-function navigate(delta) {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
+// ============================================================
+// STUDY LEVEL TABS (C / C+V / Word / Sentence)
+// ============================================================
+function initStudyLevelTabs() {
+    const tabs = document.querySelectorAll('.study-tab');
     
-    const total = lang.consonants.length;
-    
-    if (state.practiceMode === 'unpracticed') {
-        const unpracticedIndices = [];
-        for (let i = 0; i < total; i++) {
-            if (!isPracticed(i)) unpracticedIndices.push(i);
-        }
-        if (unpracticedIndices.length === 0) {
-            state.currentIndex = (state.currentIndex + delta + total) % total;
+    // Set active based on saved state
+    tabs.forEach(tab => {
+        if (tab.dataset.level === currentLevel) {
+            tab.classList.add('active');
         } else {
-            const currentIdx = unpracticedIndices.indexOf(state.currentIndex);
-            if (currentIdx === -1) {
-                state.currentIndex = unpracticedIndices[0];
-            } else {
-                const newIdx = (currentIdx + delta + unpracticedIndices.length) % unpracticedIndices.length;
-                state.currentIndex = unpracticedIndices[newIdx];
-            }
-        }
-    } else {
-        state.currentIndex = (state.currentIndex + delta + total) % total;
-    }
-    
-    if (practiceCanvas) practiceCanvas.clear();
-    saveState(state);
-    updatePracticeDisplay();
-}
-
-// Go to random character
-function goRandom() {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    state.currentIndex = Math.floor(Math.random() * lang.consonants.length);
-    
-    if (practiceCanvas) practiceCanvas.clear();
-    saveState(state);
-    updatePracticeDisplay();
-}
-
-// Jump to specific character
-function jumpToChar(index) {
-    state.currentIndex = index;
-    if (practiceCanvas) practiceCanvas.clear();
-    saveState(state);
-    updatePracticeDisplay();
-}
-
-// Mark as done
-function markAsDone() {
-    const key = `${state.currentLang}_${state.currentIndex}`;
-    state.practicedChars[key] = true;
-    saveState(state);
-    updateStats();
-    updatePracticeDisplay();
-    
-    setTimeout(() => navigate(1), 300);
-}
-
-// Update stats display
-function updateStats() {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    let practicedCount = 0;
-    for (let i = 0; i < lang.consonants.length; i++) {
-        if (isPracticed(i)) practicedCount++;
-    }
-    
-    if (elements.practicedCount) {
-        elements.practicedCount.textContent = practicedCount;
-    }
-    if (elements.totalCount) {
-        elements.totalCount.textContent = lang.consonants.length;
-    }
-    if (elements.progressPercent) {
-        elements.progressPercent.textContent = Math.round((practicedCount / lang.consonants.length) * 100) + '%';
-    }
-}
-
-// ========== QUIZ MODE FUNCTIONS ==========
-
-function updateQuizDisplay() {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    const charData = lang.consonants[state.quizIndex];
-    if (!charData) return;
-    
-    // Update quiz prompt
-    if (elements.quizDevanagari) {
-        if (lang.hasDevanagari && charData.devanagari) {
-            elements.quizDevanagari.textContent = charData.devanagari;
-            elements.quizDevanagari.className = 'quiz-prompt devanagari';
-        } else {
-            elements.quizDevanagari.textContent = '?';
-            elements.quizDevanagari.className = 'quiz-prompt';
-        }
-    }
-    
-    if (elements.quizRoman) {
-        elements.quizRoman.textContent = charData.roman;
-    }
-    
-    if (elements.quizDescription) {
-        elements.quizDescription.textContent = `Character ${state.quizIndex + 1} of ${lang.consonants.length}`;
-    }
-    
-    updateQuizStats();
-    updateSessionProgress();
-    renderQuizCharGrid();
-}
-
-function updateQuizStats() {
-    if (elements.quizCorrect) {
-        elements.quizCorrect.textContent = state.quizCorrectCount;
-    }
-    if (elements.quizIncorrect) {
-        elements.quizIncorrect.textContent = state.quizIncorrectCount;
-    }
-    if (elements.quizStreak) {
-        elements.quizStreak.textContent = state.quizStreak || 0;
-    }
-}
-
-function updateSessionProgress() {
-    const practiced = state.sessionPracticed?.length || 0;
-    const target = state.dailyTarget || 10;
-    
-    if (elements.sessionCount) {
-        elements.sessionCount.textContent = practiced;
-    }
-    if (elements.sessionTarget) {
-        elements.sessionTarget.textContent = target;
-    }
-    if (elements.sessionProgress) {
-        const percent = Math.min((practiced / target) * 100, 100);
-        elements.sessionProgress.style.width = `${percent}%`;
-    }
-}
-
-function renderQuizCharGrid() {
-    if (!elements.quizCharGrid) return;
-    
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    elements.quizCharGrid.innerHTML = '';
-    
-    lang.consonants.forEach((charData, index) => {
-        const cell = document.createElement('div');
-        const key = `${state.currentLang}_${index}`;
-        cell.className = `char-cell quiz-grid-cell`;
-        
-        if (index === state.quizIndex) {
-            cell.classList.add('current');
-        } else if (state.quizResults[key] === 'correct') {
-            cell.classList.add('practiced', 'correct-answer');
-        } else if (state.quizResults[key] === 'incorrect') {
-            cell.classList.add('unpracticed', 'incorrect-answer');
-        } else {
-            cell.classList.add('unpracticed');
+            tab.classList.remove('active');
         }
         
-        // Show Devanagari or romanization
-        if (charData.devanagari) {
-            cell.textContent = charData.devanagari;
-            cell.classList.add('devanagari');
-        } else {
-            cell.textContent = charData.roman.substring(0, 2);
-            cell.style.fontSize = '0.8rem';
-        }
-        
-        cell.onclick = () => jumpToQuizChar(index);
-        elements.quizCharGrid.appendChild(cell);
-    });
-}
-
-function quizNavigate(delta) {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    const total = lang.consonants.length;
-    
-    if (state.quizMode === 'mistakes') {
-        const mistakeIndices = [];
-        for (let i = 0; i < total; i++) {
-            const key = `${state.currentLang}_${i}`;
-            if (state.quizResults[key] === 'incorrect') mistakeIndices.push(i);
-        }
-        if (mistakeIndices.length === 0) {
-            state.quizIndex = (state.quizIndex + delta + total) % total;
-        } else {
-            const currentIdx = mistakeIndices.indexOf(state.quizIndex);
-            if (currentIdx === -1) {
-                state.quizIndex = mistakeIndices[0];
-            } else {
-                const newIdx = (currentIdx + delta + mistakeIndices.length) % mistakeIndices.length;
-                state.quizIndex = mistakeIndices[newIdx];
-            }
-        }
-    } else {
-        state.quizIndex = (state.quizIndex + delta + total) % total;
-    }
-    
-    if (quizCanvas) quizCanvas.clear();
-    hideAnswerReveal();
-    saveState(state);
-    updateQuizDisplay();
-}
-
-function quizGoRandom() {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    // Get characters not yet practiced in this session (up to daily target)
-    const target = state.dailyTarget || 10;
-    const sessionPracticed = state.sessionPracticed || [];
-    
-    if (sessionPracticed.length >= target) {
-        // Daily target reached, pick from any
-        state.quizIndex = Math.floor(Math.random() * lang.consonants.length);
-    } else {
-        // Pick from unpracticed in session
-        const unpracticed = [];
-        for (let i = 0; i < lang.consonants.length; i++) {
-            if (!sessionPracticed.includes(i)) {
-                unpracticed.push(i);
-            }
-        }
-        
-        if (unpracticed.length > 0) {
-            state.quizIndex = unpracticed[Math.floor(Math.random() * unpracticed.length)];
-        } else {
-            state.quizIndex = Math.floor(Math.random() * lang.consonants.length);
-        }
-    }
-    
-    if (quizCanvas) quizCanvas.clear();
-    hideAnswerReveal();
-    saveState(state);
-    updateQuizDisplay();
-}
-
-function jumpToQuizChar(index) {
-    state.quizIndex = index;
-    if (quizCanvas) quizCanvas.clear();
-    hideAnswerReveal();
-    saveState(state);
-    updateQuizDisplay();
-}
-
-function revealAnswer() {
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    const charData = lang.consonants[state.quizIndex];
-    
-    if (elements.answerChar) {
-        elements.answerChar.textContent = charData.char;
-        elements.answerChar.className = `answer-char ${lang.fontClass}`;
-    }
-    
-    if (elements.answerReveal) {
-        elements.answerReveal.classList.add('visible');
-    }
-    if (elements.quizNavButtons) {
-        elements.quizNavButtons.style.display = 'none';
-    }
-}
-
-function hideAnswerReveal() {
-    if (elements.answerReveal) {
-        elements.answerReveal.classList.remove('visible');
-    }
-    if (elements.quizNavButtons) {
-        elements.quizNavButtons.style.display = 'flex';
-    }
-}
-
-function markQuizResult(isCorrect) {
-    const key = `${state.currentLang}_${state.quizIndex}`;
-    state.quizResults[key] = isCorrect ? 'correct' : 'incorrect';
-    
-    // Track attempt history
-    if (!state.attemptHistory[key]) {
-        state.attemptHistory[key] = [];
-    }
-    state.attemptHistory[key].push(isCorrect);
-    if (state.attemptHistory[key].length > 10) {
-        state.attemptHistory[key].shift();
-    }
-    
-    // Track session progress
-    if (!state.sessionPracticed) {
-        state.sessionPracticed = [];
-    }
-    if (!state.sessionPracticed.includes(state.quizIndex)) {
-        state.sessionPracticed.push(state.quizIndex);
-    }
-    
-    if (isCorrect) {
-        state.quizCorrectCount = (state.quizCorrectCount || 0) + 1;
-        state.quizStreak = (state.quizStreak || 0) + 1;
-    } else {
-        state.quizIncorrectCount = (state.quizIncorrectCount || 0) + 1;
-        state.quizStreak = 0;
-    }
-    
-    saveState(state);
-    updateQuizStats();
-    updateSessionProgress();
-    renderReviewChart();
-    
-    setTimeout(() => {
-        quizGoRandom(); // Go to next random character
-    }, 300);
-}
-
-function setDailyTarget(target) {
-    state.dailyTarget = parseInt(target) || 10;
-    saveState(state);
-    updateSessionProgress();
-}
-
-// ========== PRACTICE SHEET FUNCTIONS ==========
-
-function renderPracticeSheet() {
-    if (!elements.sheetGrid) return;
-    
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    elements.sheetGrid.innerHTML = '';
-    
-    lang.consonants.forEach((charData, index) => {
-        const cell = document.createElement('div');
-        cell.className = 'sheet-cell';
-        
-        // Label
-        const label = document.createElement('div');
-        label.className = 'sheet-cell-label';
-        label.textContent = charData.devanagari || charData.roman;
-        cell.appendChild(label);
-        
-        // Checkbox
-        const checkbox = document.createElement('div');
-        checkbox.className = 'sheet-cell-checkbox';
-        const key = `sheet_${state.currentLang}_${index}`;
-        if (state.practicedChars[key]) {
-            checkbox.classList.add('checked');
-        }
-        checkbox.onclick = (e) => {
-            e.stopPropagation();
-            state.practicedChars[key] = !state.practicedChars[key];
-            checkbox.classList.toggle('checked');
-            saveState(state);
-        };
-        cell.appendChild(checkbox);
-        
-        // Ghost character
-        const charEl = document.createElement('div');
-        charEl.className = `sheet-cell-char ${lang.fontClass}`;
-        if (!state.sheetShowGuide) {
-            charEl.classList.add('hide-guide');
-        }
-        charEl.textContent = charData.char;
-        cell.appendChild(charEl);
-        
-        elements.sheetGrid.appendChild(cell);
-    });
-}
-
-// ========== REVIEW CHART FUNCTIONS ==========
-
-function getStrengthClass(successRate) {
-    if (successRate >= 0.8) return 'strong';
-    if (successRate >= 0.6) return 'good';
-    if (successRate >= 0.4) return 'medium';
-    if (successRate >= 0.2) return 'weak';
-    return 'very-weak';
-}
-
-function calculateSuccessRate(key, mode) {
-    const history = state.attemptHistory[key];
-    if (!history || history.length === 0) return null;
-    
-    const attempts = mode === 'last5' ? history.slice(-5) : history;
-    const correct = attempts.filter(a => a === true).length;
-    return correct / attempts.length;
-}
-
-function renderReviewChart() {
-    if (!elements.reviewGrid) return;
-    
-    const lang = languages[state.currentLang];
-    if (!lang) return;
-    
-    elements.reviewGrid.innerHTML = '';
-    
-    lang.consonants.forEach((charData, index) => {
-        const key = `${state.currentLang}_${index}`;
-        const cell = document.createElement('div');
-        cell.className = 'review-cell';
-        
-        const successRate = calculateSuccessRate(key, state.reviewMode);
-        const history = state.attemptHistory[key] || [];
-        
-        if (successRate === null) {
-            cell.classList.add('not-attempted');
-        } else {
-            cell.classList.add(getStrengthClass(successRate));
-        }
-        
-        // Main character
-        const charEl = document.createElement('div');
-        charEl.className = `review-cell-char ${lang.fontClass}`;
-        charEl.textContent = charData.char;
-        cell.appendChild(charEl);
-        
-        // Devanagari/romanization
-        const devanagariEl = document.createElement('div');
-        devanagariEl.className = 'review-cell-devanagari';
-        devanagariEl.textContent = charData.devanagari || charData.roman;
-        cell.appendChild(devanagariEl);
-        
-        // Stats
-        if (history.length > 0) {
-            const statsEl = document.createElement('div');
-            statsEl.className = 'review-cell-stats';
-            const relevantHistory = state.reviewMode === 'last5' ? history.slice(-5) : history;
-            const correct = relevantHistory.filter(a => a === true).length;
-            statsEl.textContent = `${correct}/${relevantHistory.length}`;
-            cell.appendChild(statsEl);
-        }
-        
-        // Tooltip
-        const tooltip = document.createElement('div');
-        tooltip.className = 'review-tooltip';
-        if (history.length > 0) {
-            const relevantHistory = state.reviewMode === 'last5' ? history.slice(-5) : history;
-            const correct = relevantHistory.filter(a => a === true).length;
-            const rate = Math.round((correct / relevantHistory.length) * 100);
-            tooltip.textContent = `${charData.roman}: ${correct}/${relevantHistory.length} (${rate}%)`;
-        } else {
-            tooltip.textContent = `${charData.roman}: Not attempted`;
-        }
-        cell.appendChild(tooltip);
-        
-        // Click to practice
-        cell.onclick = () => {
-            state.quizIndex = index;
-            switchView('quiz');
-            setTimeout(() => {
-                if (quizCanvas) quizCanvas.clear();
-                hideAnswerReveal();
-                updateQuizDisplay();
-            }, 150);
-        };
-        
-        elements.reviewGrid.appendChild(cell);
-    });
-}
-
-// ========== EVENT LISTENERS ==========
-
-function setupEventListeners() {
-    // Navigation buttons
-    document.getElementById('prevBtn')?.addEventListener('click', () => navigate(-1));
-    document.getElementById('nextBtn')?.addEventListener('click', () => navigate(1));
-    document.getElementById('randomBtn')?.addEventListener('click', goRandom);
-    
-    // Practice actions
-    document.getElementById('clearBtn')?.addEventListener('click', () => practiceCanvas?.clear());
-    document.getElementById('undoBtn')?.addEventListener('click', () => practiceCanvas?.undo());
-    document.getElementById('markDoneBtn')?.addEventListener('click', markAsDone);
-    document.getElementById('skipBtn')?.addEventListener('click', () => navigate(1));
-    
-    // Stroke width
-    document.getElementById('strokeSlider')?.addEventListener('input', (e) => {
-        state.strokeWidth = parseInt(e.target.value);
-        if (practiceCanvas) practiceCanvas.setStrokeWidth(state.strokeWidth);
-        document.getElementById('strokeValue').textContent = state.strokeWidth + 'px';
-        saveState(state);
-    });
-    
-    // Guide toggle
-    document.getElementById('showGuide')?.addEventListener('change', (e) => {
-        state.showGuide = e.target.checked;
-        const lang = languages[state.currentLang];
-        const charData = lang?.consonants[state.currentIndex];
-        if (practiceCanvas && charData) {
-            practiceCanvas.drawGuide(charData.char, lang.fontFamily, state.showGuide);
-        }
-        saveState(state);
-    });
-    
-    // Practice mode toggle
-    document.querySelectorAll('.mode-btn[data-mode]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.practiceMode = btn.dataset.mode;
-            saveState(state);
+        tab.addEventListener('click', async () => {
+            if (tab.classList.contains('disabled')) return;
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            currentLevel = tab.dataset.level;
+            currentIndex = 0;
+            storage.saveAppState({ currentLevel, currentIndex });
+            
+            // Show/hide word filters
+            const wordFilters = document.getElementById('wordFilters');
+            wordFilters.style.display = currentLevel === 'word' ? 'flex' : 'none';
+            
+            await loadDataForLevel();
+            updateDisplay();
+            updateStats();
+            updateCharGrid();
+            updateSheetGrid();
+            updateReviewGrid();
         });
     });
     
-    // Main view tabs
-    document.querySelectorAll('.main-tab').forEach(tab => {
-        tab.addEventListener('click', () => switchView(tab.dataset.view));
+    // Initial visibility of word filters
+    document.getElementById('wordFilters').style.display = currentLevel === 'word' ? 'flex' : 'none';
+}
+
+// ============================================================
+// MAIN TABS (Practice / Quiz / Sheet / Review)
+// ============================================================
+function initMainTabs() {
+    const tabs = document.querySelectorAll('.main-tab');
+    const views = {
+        practice: document.getElementById('practiceView'),
+        quiz: document.getElementById('quizView'),
+        sheet: document.getElementById('sheetView'),
+        review: document.getElementById('reviewView')
+    };
+    
+    // Set active based on saved state
+    tabs.forEach(tab => {
+        if (tab.dataset.view === currentView) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
     });
     
-    // Quiz mode toggle
+    Object.entries(views).forEach(([key, view]) => {
+        if (key === currentView) {
+            view.classList.add('active');
+        } else {
+            view.classList.remove('active');
+        }
+    });
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            const view = tab.dataset.view;
+            currentView = view;
+            storage.saveAppState({ currentView });
+            
+            Object.values(views).forEach(v => v.classList.remove('active'));
+            views[view].classList.add('active');
+            
+            if (view === 'quiz') {
+                updateQuizDisplay();
+            } else if (view === 'sheet') {
+                updateSheetGrid();
+            } else if (view === 'review') {
+                updateReviewGrid();
+            }
+        });
+    });
+}
+
+// ============================================================
+// MODE TOGGLES
+// ============================================================
+function initModeToggles() {
+    // Practice mode
+    document.querySelectorAll('.mode-btn[data-mode]').forEach(btn => {
+        if (btn.dataset.mode === practiceMode) {
+            btn.classList.add('active');
+        }
+        
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            practiceMode = btn.dataset.mode;
+            storage.saveAppState({ practiceMode });
+        });
+    });
+    
+    // Quiz mode
     document.querySelectorAll('.mode-btn[data-quiz-mode]').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.mode-btn[data-quiz-mode]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            state.quizMode = btn.dataset.quizMode;
-            saveState(state);
+            quizMode = btn.dataset.quizMode;
+            storage.saveAppState({ quizMode });
         });
     });
     
-    // Quiz navigation
-    document.getElementById('quizPrevBtn')?.addEventListener('click', () => quizNavigate(-1));
-    document.getElementById('quizNextBtn')?.addEventListener('click', () => quizNavigate(1));
-    document.getElementById('quizRandomBtn')?.addEventListener('click', quizGoRandom);
-    
-    // Quiz actions
-    document.getElementById('quizClearBtn')?.addEventListener('click', () => quizCanvas?.clear());
-    document.getElementById('quizUndoBtn')?.addEventListener('click', () => quizCanvas?.undo());
-    document.getElementById('quizSkipBtn')?.addEventListener('click', quizGoRandom);
-    document.getElementById('checkAnswerBtn')?.addEventListener('click', revealAnswer);
-    document.getElementById('markCorrect')?.addEventListener('click', () => markQuizResult(true));
-    document.getElementById('markIncorrect')?.addEventListener('click', () => markQuizResult(false));
-    
-    // Quiz stroke width
-    document.getElementById('quizStrokeSlider')?.addEventListener('input', (e) => {
-        const width = parseInt(e.target.value);
-        if (quizCanvas) quizCanvas.setStrokeWidth(width);
-        document.getElementById('quizStrokeValue').textContent = width + 'px';
-    });
-    
-    // Daily target
-    document.getElementById('dailyTargetInput')?.addEventListener('change', (e) => {
-        setDailyTarget(e.target.value);
-    });
-    
-    // Sheet guide toggle
-    document.getElementById('sheetShowGuide')?.addEventListener('change', (e) => {
-        state.sheetShowGuide = e.target.checked;
-        saveState(state);
-        renderPracticeSheet();
-    });
-    
-    // Review mode toggle
+    // Review mode
     document.querySelectorAll('.mode-btn[data-review-mode]').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.mode-btn[data-review-mode]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            state.reviewMode = btn.dataset.reviewMode;
-            saveState(state);
-            renderReviewChart();
+            updateReviewGrid();
         });
-    });
-    
-    // Window resize
-    window.addEventListener('resize', () => {
-        if (practiceCanvas) {
-            practiceCanvas.setup();
-            const lang = languages[state.currentLang];
-            const charData = lang?.consonants[state.currentIndex];
-            if (charData) {
-                practiceCanvas.drawGuide(charData.char, lang.fontFamily, state.showGuide);
-            }
-            practiceCanvas.redraw();
-        }
-        if (quizCanvas && state.currentView === 'quiz') {
-            quizCanvas.setup();
-            quizCanvas.redraw();
-        }
     });
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', init);
+// ============================================================
+// WORD FILTERS
+// ============================================================
+function initWordFilters() {
+    const groupBy = document.getElementById('wordGroupBy');
+    const anchorFilter = document.getElementById('anchorFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    
+    groupBy.addEventListener('change', async () => {
+        await loadDataForLevel();
+        updateDisplay();
+        updateCharGrid();
+    });
+    
+    anchorFilter.addEventListener('change', async () => {
+        await loadDataForLevel();
+        updateDisplay();
+        updateCharGrid();
+    });
+    
+    categoryFilter.addEventListener('change', async () => {
+        await loadDataForLevel();
+        updateDisplay();
+        updateCharGrid();
+    });
+}
+
+async function populateFilterDropdowns() {
+    // Populate anchors
+    const anchorSelect = document.getElementById('anchorFilter');
+    anchorSelect.innerHTML = '<option value="">All Anchors</option>';
+    for (const anchor of dbAnchors) {
+        const opt = document.createElement('option');
+        opt.value = anchor.id;
+        opt.textContent = `${anchor.burmese_word} (${anchor.meaning || ''})`;
+        anchorSelect.appendChild(opt);
+    }
+    
+    // Populate categories
+    const categorySelect = document.getElementById('categoryFilter');
+    categorySelect.innerHTML = '<option value="">All Categories</option>';
+    for (const cat of dbCategories) {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        categorySelect.appendChild(opt);
+    }
+}
+
+// ============================================================
+// CANVAS INITIALIZATION
+// ============================================================
+function initCanvases() {
+    // Practice canvas
+    practiceCanvas = new DrawingCanvas('bgCanvas', 'drawCanvas', 'guideCanvas');
+    
+    // Quiz canvas
+    quizCanvas = new DrawingCanvas('quizBgCanvas', 'quizDrawCanvas');
+    
+    // Load saved settings
+    const appState = storage.getAppState();
+    
+    // Stroke width
+    const strokeSlider = document.getElementById('strokeSlider');
+    const strokeValue = document.getElementById('strokeValue');
+    strokeSlider.value = appState.strokeWidth || 8;
+    strokeValue.textContent = `${strokeSlider.value}px`;
+    practiceCanvas.setStrokeWidth(parseInt(strokeSlider.value));
+    
+    strokeSlider.addEventListener('input', () => {
+        strokeValue.textContent = `${strokeSlider.value}px`;
+        practiceCanvas.setStrokeWidth(parseInt(strokeSlider.value));
+        storage.saveAppState({ strokeWidth: parseInt(strokeSlider.value) });
+    });
+    
+    // Quiz stroke slider
+    const quizStrokeSlider = document.getElementById('quizStrokeSlider');
+    const quizStrokeValue = document.getElementById('quizStrokeValue');
+    quizStrokeSlider.value = appState.strokeWidth || 8;
+    quizStrokeValue.textContent = `${quizStrokeSlider.value}px`;
+    quizCanvas.setStrokeWidth(parseInt(quizStrokeSlider.value));
+    
+    quizStrokeSlider.addEventListener('input', () => {
+        quizStrokeValue.textContent = `${quizStrokeSlider.value}px`;
+        quizCanvas.setStrokeWidth(parseInt(quizStrokeSlider.value));
+    });
+    
+    // Guide toggle
+    const showGuide = document.getElementById('showGuide');
+    showGuide.checked = appState.showGuide !== false;
+    
+    showGuide.addEventListener('change', () => {
+        storage.saveAppState({ showGuide: showGuide.checked });
+        if (showGuide.checked) {
+            updateGuideCharacter();
+        } else {
+            practiceCanvas.hideGuide();
+        }
+    });
+    
+    // Sheet guide toggle
+    const sheetShowGuide = document.getElementById('sheetShowGuide');
+    sheetShowGuide.addEventListener('change', () => {
+        document.querySelectorAll('.sheet-cell-char').forEach(el => {
+            el.classList.toggle('hide-guide', !sheetShowGuide.checked);
+        });
+    });
+}
+
+// ============================================================
+// CONTROLS (Navigation, Actions)
+// ============================================================
+function initControls() {
+    // Navigation buttons
+    document.getElementById('prevBtn').addEventListener('click', () => navigatePrev());
+    document.getElementById('nextBtn').addEventListener('click', () => navigateNext());
+    document.getElementById('randomBtn').addEventListener('click', () => navigateRandom());
+    
+    // Canvas actions
+    document.getElementById('undoBtn').addEventListener('click', () => practiceCanvas.undo());
+    document.getElementById('clearBtn').addEventListener('click', () => practiceCanvas.clear());
+    document.getElementById('skipBtn').addEventListener('click', () => navigateNext());
+    document.getElementById('markDoneBtn').addEventListener('click', () => markCurrentAsDone());
+    
+    // Quiz navigation
+    document.getElementById('quizPrevBtn').addEventListener('click', () => quizNavigatePrev());
+    document.getElementById('quizNextBtn').addEventListener('click', () => quizNavigateNext());
+    document.getElementById('quizRandomBtn').addEventListener('click', () => quizNavigateRandom());
+    
+    // Quiz actions
+    document.getElementById('quizUndoBtn').addEventListener('click', () => quizCanvas.undo());
+    document.getElementById('quizClearBtn').addEventListener('click', () => quizCanvas.clear());
+    document.getElementById('quizSkipBtn').addEventListener('click', () => quizNavigateNext());
+    document.getElementById('checkAnswerBtn').addEventListener('click', () => revealAnswer());
+    document.getElementById('markCorrect').addEventListener('click', () => recordQuizResult(true));
+    document.getElementById('markIncorrect').addEventListener('click', () => recordQuizResult(false));
+    
+    // Daily target
+    const dailyTargetInput = document.getElementById('dailyTargetInput');
+    const appState = storage.getAppState();
+    dailyTargetInput.value = appState.dailyTarget || 10;
+    document.getElementById('sessionTarget').textContent = dailyTargetInput.value;
+    
+    dailyTargetInput.addEventListener('change', () => {
+        storage.saveAppState({ dailyTarget: parseInt(dailyTargetInput.value) });
+        document.getElementById('sessionTarget').textContent = dailyTargetInput.value;
+        updateSessionProgress();
+    });
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadDataForLevel() {
+    switch (currentLevel) {
+        case 'consonant':
+            currentData = currentLanguage.consonants.map((c, i) => ({
+                id: `c_${i}`,
+                char: c.char,
+                roman: c.roman,
+                devanagari: c.devanagari,
+                index: i
+            }));
+            break;
+            
+        case 'cv':
+            const combinations = currentLanguage.generateCVCombinations();
+            currentData = combinations.map((c, i) => ({
+                id: `cv_${i}`,
+                char: c.char,
+                roman: c.roman,
+                devanagari: c.devanagari,
+                baseConsonant: c.baseConsonant,
+                vowel: c.vowel,
+                index: i
+            }));
+            break;
+            
+        case 'word':
+            if (isConnected && dbWords.length > 0) {
+                const categoryId = document.getElementById('categoryFilter')?.value;
+                
+                let filteredWords = dbWords;
+                if (categoryId) {
+                    filteredWords = dbWords.filter(w => w.category_id === categoryId);
+                }
+                
+                currentData = filteredWords.map((w, i) => ({
+                    id: w.id,
+                    char: w.burmese_word,
+                    roman: w.english_meaning || '',
+                    devanagari: w.devanagari || '',
+                    meaning: w.english_meaning || '',
+                    hint: w.hint || '',
+                    sentence: w.sentence || '',
+                    category: w.burmese_categories?.name || '',
+                    index: i
+                }));
+            } else {
+                // Fallback sample words
+                currentData = [
+                    { id: 'w1', char: 'ကျွန်တော်', roman: 'I (male)', devanagari: '', meaning: 'I (male speaker)', index: 0 },
+                    { id: 'w2', char: 'ကျွန်မ', roman: 'I (female)', devanagari: '', meaning: 'I (female speaker)', index: 1 },
+                    { id: 'w3', char: 'သင်', roman: 'you', devanagari: '', meaning: 'you', index: 2 },
+                    { id: 'w4', char: 'ထမင်း', roman: 'rice', devanagari: '', meaning: 'rice/meal', index: 3 },
+                    { id: 'w5', char: 'ရေ', roman: 'water', devanagari: '', meaning: 'water', index: 4 },
+                ];
+            }
+            break;
+    }
+    
+    // Ensure index is valid
+    if (currentIndex >= currentData.length) {
+        currentIndex = 0;
+    }
+}
+
+// ============================================================
+// DISPLAY UPDATES
+// ============================================================
+function updateDisplay() {
+    if (currentData.length === 0) return;
+    
+    const item = currentData[currentIndex];
+    
+    // Update target character
+    const targetChar = document.getElementById('targetChar');
+    targetChar.textContent = item.char;
+    targetChar.className = `target-char ${currentLanguage.fontClass}`;
+    
+    // Adjust font size for longer words
+    targetChar.classList.remove('word-size-1', 'word-size-2', 'word-size-3', 'word-size-4', 'word-size-5', 'word-size-6');
+    if (item.char.length > 5) {
+        targetChar.classList.add('word-size-6');
+    } else if (item.char.length > 4) {
+        targetChar.classList.add('word-size-5');
+    } else if (item.char.length > 3) {
+        targetChar.classList.add('word-size-4');
+    } else if (item.char.length > 2) {
+        targetChar.classList.add('word-size-3');
+    } else if (item.char.length > 1) {
+        targetChar.classList.add('word-size-2');
+    }
+    
+    // Update romanization / devanagari
+    const romanization = document.getElementById('romanization');
+    if (item.devanagari) {
+        romanization.textContent = item.devanagari;
+        romanization.className = 'romanization devanagari';
+    } else {
+        romanization.textContent = item.roman;
+        romanization.className = 'romanization';
+    }
+    
+    // Update description
+    const levelNames = { consonant: 'Consonant', cv: 'Combination', word: 'Word' };
+    document.getElementById('charDescription').textContent = 
+        `${levelNames[currentLevel]} ${currentIndex + 1} of ${currentData.length}`;
+    
+    // Update practice title
+    document.getElementById('practiceTitle').textContent = 
+        currentLevel === 'word' ? 'Current Word' : 'Current Character';
+    
+    // Show/hide word meaning section
+    const wordMeaning = document.getElementById('wordMeaning');
+    if (currentLevel === 'word' && item.meaning) {
+        wordMeaning.style.display = 'block';
+        document.getElementById('meaningText').textContent = item.meaning;
+        document.getElementById('hintText').textContent = item.hint ? `💡 ${item.hint}` : '';
+    } else {
+        wordMeaning.style.display = 'none';
+    }
+    
+    // Update guide character
+    updateGuideCharacter();
+    
+    // Clear canvas
+    practiceCanvas.clear();
+}
+
+function updateGuideCharacter() {
+    const showGuide = document.getElementById('showGuide').checked;
+    if (showGuide && currentData.length > 0) {
+        const item = currentData[currentIndex];
+        practiceCanvas.drawGuideCharacter(item.char, currentLanguage.fontFamily);
+    } else {
+        practiceCanvas.hideGuide();
+    }
+}
+
+function updateStats() {
+    const progress = storage.getProgress(currentLanguage.id, currentLevel);
+    const total = currentData.length;
+    const practiced = Object.values(progress).filter(p => p.practiced).length;
+    const percent = total > 0 ? Math.round((practiced / total) * 100) : 0;
+    
+    document.getElementById('practicedCount').textContent = practiced;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('progressPercent').textContent = `${percent}%`;
+}
+
+function updateCharGrid() {
+    const grid = document.getElementById('charGrid');
+    const quizGrid = document.getElementById('quizCharGrid');
+    const progress = storage.getProgress(currentLanguage.id, currentLevel);
+    
+    let html = '';
+    for (const item of currentData) {
+        const isPracticed = progress[item.id]?.practiced;
+        const isCurrent = item.index === currentIndex;
+        const classes = [
+            'char-cell',
+            currentLanguage.fontClass,
+            isPracticed ? 'practiced' : 'unpracticed',
+            isCurrent ? 'current' : ''
+        ].filter(Boolean).join(' ');
+        
+        // For words, show first character or truncate
+        const displayChar = item.char.length > 2 ? item.char.substring(0, 2) : item.char;
+        
+        html += `<div class="${classes}" data-index="${item.index}" title="${item.char}">${displayChar}</div>`;
+    }
+    
+    grid.innerHTML = html;
+    quizGrid.innerHTML = html;
+    
+    // Add click handlers
+    [grid, quizGrid].forEach(g => {
+        g.querySelectorAll('.char-cell').forEach(cell => {
+            cell.addEventListener('click', () => {
+                currentIndex = parseInt(cell.dataset.index);
+                storage.saveAppState({ currentIndex });
+                updateDisplay();
+                updateCharGrid();
+                if (currentView === 'quiz') {
+                    updateQuizDisplay();
+                }
+            });
+        });
+    });
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigatePrev() {
+    if (practiceMode === 'sequential') {
+        currentIndex = (currentIndex - 1 + currentData.length) % currentData.length;
+    } else {
+        navigateRandom();
+        return;
+    }
+    storage.saveAppState({ currentIndex });
+    updateDisplay();
+    updateCharGrid();
+}
+
+function navigateNext() {
+    if (practiceMode === 'sequential') {
+        currentIndex = (currentIndex + 1) % currentData.length;
+    } else if (practiceMode === 'unpracticed') {
+        const progress = storage.getProgress(currentLanguage.id, currentLevel);
+        const unpracticed = currentData.filter(item => !progress[item.id]?.practiced);
+        if (unpracticed.length > 0) {
+            const randomItem = unpracticed[Math.floor(Math.random() * unpracticed.length)];
+            currentIndex = randomItem.index;
+        } else {
+            currentIndex = (currentIndex + 1) % currentData.length;
+        }
+    } else {
+        navigateRandom();
+        return;
+    }
+    storage.saveAppState({ currentIndex });
+    updateDisplay();
+    updateCharGrid();
+}
+
+function navigateRandom() {
+    currentIndex = Math.floor(Math.random() * currentData.length);
+    storage.saveAppState({ currentIndex });
+    updateDisplay();
+    updateCharGrid();
+}
+
+function markCurrentAsDone() {
+    if (currentData.length === 0) return;
+    
+    const item = currentData[currentIndex];
+    storage.markPracticed(currentLanguage.id, currentLevel, item.id);
+    
+    // Track session
+    if (!sessionPracticed.includes(item.id)) {
+        sessionPracticed.push(item.id);
+        updateSessionProgress();
+    }
+    
+    updateStats();
+    updateCharGrid();
+    navigateNext();
+}
+
+// ============================================================
+// QUIZ MODE
+// ============================================================
+function updateQuizDisplay() {
+    if (currentData.length === 0) return;
+    
+    const item = currentData[currentIndex];
+    
+    // Update quiz prompt
+    document.getElementById('quizRoman').textContent = item.roman || '';
+    document.getElementById('quizDevanagari').textContent = item.devanagari || item.roman;
+    document.getElementById('quizDevanagari').className = item.devanagari ? 'quiz-prompt devanagari' : 'quiz-prompt';
+    
+    document.getElementById('quizDescription').textContent = 
+        `Character ${currentIndex + 1} of ${currentData.length}`;
+    
+    // Update answer character
+    document.getElementById('answerChar').textContent = item.char;
+    document.getElementById('answerChar').className = `answer-char ${currentLanguage.fontClass}`;
+    
+    // Hide answer reveal
+    document.getElementById('answerReveal').classList.remove('visible');
+    answerRevealed = false;
+    
+    // Show check button, hide nav
+    document.getElementById('checkAnswerBtn').style.display = 'inline-block';
+    document.getElementById('quizNavButtons').style.display = 'flex';
+    
+    // Clear quiz canvas
+    quizCanvas.clear();
+    
+    // Update quiz stats display
+    document.getElementById('quizCorrect').textContent = quizStats.correct;
+    document.getElementById('quizIncorrect').textContent = quizStats.incorrect;
+    document.getElementById('quizStreak').textContent = quizStats.streak;
+}
+
+function quizNavigatePrev() {
+    currentIndex = (currentIndex - 1 + currentData.length) % currentData.length;
+    storage.saveAppState({ currentIndex });
+    updateQuizDisplay();
+    updateCharGrid();
+}
+
+function quizNavigateNext() {
+    if (quizMode === 'sequential') {
+        currentIndex = (currentIndex + 1) % currentData.length;
+    } else if (quizMode === 'mistakes') {
+        const mistakes = storage.getMistakes(currentLanguage.id, currentLevel);
+        if (mistakes.length > 0) {
+            const randomMistake = mistakes[Math.floor(Math.random() * mistakes.length)];
+            const idx = currentData.findIndex(d => d.id === randomMistake.charId);
+            if (idx >= 0) currentIndex = idx;
+        }
+    } else {
+        currentIndex = Math.floor(Math.random() * currentData.length);
+    }
+    storage.saveAppState({ currentIndex });
+    updateQuizDisplay();
+    updateCharGrid();
+}
+
+function quizNavigateRandom() {
+    currentIndex = Math.floor(Math.random() * currentData.length);
+    storage.saveAppState({ currentIndex });
+    updateQuizDisplay();
+    updateCharGrid();
+}
+
+function revealAnswer() {
+    document.getElementById('answerReveal').classList.add('visible');
+    answerRevealed = true;
+}
+
+function recordQuizResult(correct) {
+    if (currentData.length === 0) return;
+    
+    const item = currentData[currentIndex];
+    storage.recordAttempt(currentLanguage.id, currentLevel, item.id, correct);
+    
+    if (correct) {
+        quizStats.correct++;
+        quizStats.streak++;
+    } else {
+        quizStats.incorrect++;
+        quizStats.streak = 0;
+    }
+    
+    // Track session
+    if (!sessionPracticed.includes(item.id)) {
+        sessionPracticed.push(item.id);
+        updateSessionProgress();
+    }
+    
+    updateStats();
+    updateCharGrid();
+    quizNavigateNext();
+}
+
+function updateSessionProgress() {
+    const target = parseInt(document.getElementById('dailyTargetInput').value);
+    const count = sessionPracticed.length;
+    const percent = Math.min(100, Math.round((count / target) * 100));
+    
+    document.getElementById('sessionCount').textContent = count;
+    document.getElementById('sessionProgress').style.width = `${percent}%`;
+}
+
+// ============================================================
+// PRACTICE SHEET
+// ============================================================
+function updateSheetGrid() {
+    const grid = document.getElementById('sheetGrid');
+    const showGuide = document.getElementById('sheetShowGuide').checked;
+    
+    let html = '';
+    for (const item of currentData) {
+        const label = item.devanagari || item.roman;
+        const charClass = showGuide ? '' : 'hide-guide';
+        
+        html += `
+            <div class="sheet-cell">
+                <div class="sheet-cell-label devanagari">${label}</div>
+                <div class="sheet-cell-checkbox" data-id="${item.id}"></div>
+                <div class="sheet-cell-char ${currentLanguage.fontClass} ${charClass}">${item.char}</div>
+            </div>
+        `;
+    }
+    
+    grid.innerHTML = html;
+    
+    // Add checkbox click handlers
+    grid.querySelectorAll('.sheet-cell-checkbox').forEach(cb => {
+        cb.addEventListener('click', () => {
+            cb.classList.toggle('checked');
+        });
+    });
+}
+
+// ============================================================
+// REVIEW CHART
+// ============================================================
+function updateReviewGrid() {
+    const grid = document.getElementById('reviewGrid');
+    const progress = storage.getProgress(currentLanguage.id, currentLevel);
+    const reviewMode = document.querySelector('.mode-btn[data-review-mode].active')?.dataset.reviewMode || 'last5';
+    
+    let html = '';
+    for (const item of currentData) {
+        const data = progress[item.id] || { correct: 0, incorrect: 0, attempts: [] };
+        
+        let score = 0;
+        if (reviewMode === 'last5' && data.attempts?.length > 0) {
+            const last5 = data.attempts.slice(-5);
+            const correctCount = last5.filter(a => a.correct).length;
+            score = (correctCount / last5.length) * 100;
+        } else if (data.correct + data.incorrect > 0) {
+            score = (data.correct / (data.correct + data.incorrect)) * 100;
+        }
+        
+        let strengthClass = 'not-attempted';
+        if (data.correct + data.incorrect > 0 || data.attempts?.length > 0) {
+            if (score >= 80) strengthClass = 'strong';
+            else if (score >= 60) strengthClass = 'good';
+            else if (score >= 40) strengthClass = 'medium';
+            else if (score >= 20) strengthClass = 'weak';
+            else strengthClass = 'very-weak';
+        }
+        
+        const displayChar = item.char.length > 2 ? item.char.substring(0, 2) : item.char;
+        const stats = `${data.correct}/${data.correct + data.incorrect}`;
+        
+        html += `
+            <div class="review-cell ${strengthClass}" data-index="${item.index}">
+                <div class="review-cell-char ${currentLanguage.fontClass}">${displayChar}</div>
+                <div class="review-cell-stats">${stats}</div>
+                ${item.devanagari ? `<div class="review-cell-devanagari devanagari">${item.devanagari}</div>` : ''}
+            </div>
+        `;
+    }
+    
+    grid.innerHTML = html;
+    
+    // Add click handlers
+    grid.querySelectorAll('.review-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+            currentIndex = parseInt(cell.dataset.index);
+            storage.saveAppState({ currentIndex });
+            
+            // Switch to practice view
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.main-tab[data-view="practice"]').classList.add('active');
+            document.querySelectorAll('.practice-view, .quiz-view, .sheet-view, .review-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('practiceView').classList.add('active');
+            currentView = 'practice';
+            
+            updateDisplay();
+            updateCharGrid();
+        });
+    });
+}
+
+// ============================================================
+// SUPABASE CONNECTION
+// ============================================================
+async function tryConnectSupabase() {
+    const client = await storage.initSupabase();
+    if (client) {
+        isConnected = true;
+        updateConnectionStatus(true);
+        
+        // Load data from Supabase
+        dbWords = await storage.fetchWords();
+        dbAnchors = await storage.fetchAnchors();
+        dbCategories = await storage.fetchCategories();
+        
+        // Populate filter dropdowns
+        await populateFilterDropdowns();
+        
+        // Reload data if on word level
+        if (currentLevel === 'word') {
+            await loadDataForLevel();
+            updateDisplay();
+            updateCharGrid();
+        }
+    } else {
+        updateConnectionStatus(false);
+    }
+}
+
+function updateConnectionStatus(connected) {
+    const status = document.getElementById('connectionStatus');
+    if (connected) {
+        status.classList.add('connected');
+        status.querySelector('.status-text').textContent = 'Connected to Supabase';
+    } else {
+        status.classList.remove('connected');
+        status.querySelector('.status-text').textContent = 'Offline Mode';
+    }
+}
+
+// Modal functions (global for onclick)
+window.closeSupabaseModal = function() {
+    document.getElementById('supabaseModal').style.display = 'none';
+};
+
+window.connectSupabase = async function() {
+    const url = document.getElementById('supabaseUrl').value.trim();
+    const key = document.getElementById('supabaseKey').value.trim();
+    
+    if (url && key) {
+        storage.saveSupabaseConfig(url, key);
+        await tryConnectSupabase();
+        closeSupabaseModal();
+    }
+};
+
+// Show modal if not connected (optional - uncomment to enable)
+// setTimeout(() => {
+//     if (!isConnected) {
+//         document.getElementById('supabaseModal').style.display = 'flex';
+//     }
+// }, 1000);

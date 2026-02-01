@@ -1,4 +1,4 @@
-/* Burmese Learning App - Main Styles */
+/* Consonants Practice App - Main Styles */
 
 :root {
     --bg-primary: #0a0a0f;
@@ -10,7 +10,6 @@
     --accent-orange: #f59e0b;
     --accent-red: #ef4444;
     --accent-blue: #3b82f6;
-    --accent-purple: #8b5cf6;
     --border-color: #2a2a3a;
     --canvas-bg: #fefefe;
     --stroke-color: #1a1a25;
@@ -77,7 +76,7 @@ h1 {
     gap: 0.5rem;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .lang-tab {
@@ -108,12 +107,16 @@ h1 {
     font-weight: 500;
 }
 
+.lang-tab .native {
+    font-size: 1.1rem;
+}
+
 /* Stats Bar */
 .stats-bar {
     display: flex;
     gap: 1rem;
     justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     flex-wrap: wrap;
 }
 
@@ -139,59 +142,7 @@ h1 {
     letter-spacing: 0.5px;
 }
 
-/* Study Level Tabs (C / C+V / Word / Sentence) */
-.study-level-tabs {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.study-tab {
-    padding: 1rem 1.5rem;
-    background: var(--bg-card);
-    border: 2px solid var(--border-color);
-    border-radius: 16px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Outfit', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 120px;
-}
-
-.study-tab .tab-icon {
-    font-size: 1.8rem;
-    font-family: 'Noto Sans Myanmar', sans-serif;
-}
-
-.study-tab .tab-label {
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-.study-tab:hover:not(.disabled) {
-    border-color: var(--accent-purple);
-    color: var(--text-primary);
-    transform: translateY(-2px);
-}
-
-.study-tab.active {
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-    border-color: transparent;
-    color: white;
-}
-
-.study-tab.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Main Tab Toggle (Practice/Quiz/Sheet/Review) */
+/* Main Tab Toggle */
 .main-tabs {
     display: flex;
     gap: 0.5rem;
@@ -228,8 +179,7 @@ h1 {
     display: flex;
     gap: 0.5rem;
     justify-content: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    margin-bottom: 2rem;
 }
 
 .mode-btn {
@@ -252,46 +202,6 @@ h1 {
     background: var(--accent-orange);
     border-color: var(--accent-orange);
     color: white;
-}
-
-/* Word Filters */
-.word-filters {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    padding: 1rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-}
-
-.filter-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.filter-group label {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.filter-group select {
-    padding: 0.5rem 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.85rem;
-    cursor: pointer;
-}
-
-.filter-group select:focus {
-    outline: none;
-    border-color: var(--accent-blue);
 }
 
 /* Hide sections based on mode */
@@ -331,16 +241,7 @@ h1 {
     line-height: 1;
     margin: 1rem 0;
     opacity: 0.95;
-    word-break: break-all;
 }
-
-/* Dynamic font sizing for words */
-.target-char.word-size-1 { font-size: 8rem; }
-.target-char.word-size-2 { font-size: 6rem; }
-.target-char.word-size-3 { font-size: 5rem; }
-.target-char.word-size-4 { font-size: 4rem; }
-.target-char.word-size-5 { font-size: 3.5rem; }
-.target-char.word-size-6 { font-size: 3rem; }
 
 .char-info {
     color: var(--text-secondary);
@@ -353,26 +254,6 @@ h1 {
     color: var(--text-primary);
     margin-bottom: 0.5rem;
     font-weight: 500;
-}
-
-.word-meaning {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    text-align: left;
-}
-
-.meaning-text {
-    font-size: 1rem;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.hint-text {
-    font-size: 0.85rem;
-    color: var(--accent-orange);
-    font-style: italic;
 }
 
 .nav-buttons {
@@ -515,24 +396,12 @@ h1 {
     border-color: var(--accent-blue);
 }
 
-.action-btn.check-btn {
-    background: linear-gradient(135deg, var(--accent-blue), #2563eb);
-    color: white;
-}
-
-.action-btn.check-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-}
-
 /* Progress Panel */
 .progress-panel {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
-    max-height: 600px;
-    overflow-y: auto;
 }
 
 .progress-title {
@@ -760,6 +629,16 @@ input:checked + .toggle-slider:before {
     box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
 }
 
+.check-btn {
+    background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+    color: white;
+}
+
+.check-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
 /* Quiz Stats */
 .quiz-stats {
     display: flex;
@@ -781,9 +660,17 @@ input:checked + .toggle-slider:before {
     margin-right: 0.3rem;
 }
 
-.quiz-stat.correct-stat .value { color: var(--accent-green); }
-.quiz-stat.incorrect-stat .value { color: var(--accent-red); }
-.quiz-stat.streak-stat .value { color: var(--accent-orange); }
+.quiz-stat.correct-stat .value {
+    color: var(--accent-green);
+}
+
+.quiz-stat.incorrect-stat .value {
+    color: var(--accent-red);
+}
+
+.quiz-stat.streak-stat .value {
+    color: var(--accent-orange);
+}
 
 /* Daily Target */
 .daily-target-section {
@@ -848,6 +735,29 @@ input:checked + .toggle-slider:before {
 .session-progress-text .value {
     color: var(--accent-green);
     font-weight: 600;
+}
+
+/* Quiz Grid Cell */
+.quiz-grid-cell {
+    position: relative;
+}
+
+.quiz-grid-cell.correct-answer::after {
+    content: '✓';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: var(--accent-green);
+}
+
+.quiz-grid-cell.incorrect-answer::after {
+    content: '✗';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: var(--accent-red);
 }
 
 /* Practice Sheet Styles */
@@ -1052,94 +962,26 @@ input:checked + .toggle-slider:before {
     opacity: 0.8;
 }
 
-/* Connection Status */
-.connection-status {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent-red);
-}
-
-.connection-status.connected .status-dot {
-    background: var(--accent-green);
-}
-
-/* Modal */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-}
-
-.modal-content h3 {
-    margin-bottom: 1rem;
+.review-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-primary);
     color: var(--text-primary);
-}
-
-.modal-content p {
-    color: var(--text-secondary);
-    margin-bottom: 1.5rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 0.75rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    padding: 0.5rem 0.75rem;
     border-radius: 8px;
-    color: var(--text-primary);
-    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+    border: 1px solid var(--border-color);
 }
 
-.form-group input:focus {
-    outline: none;
-    border-color: var(--accent-blue);
-}
-
-.modal-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 1.5rem;
+.review-cell:hover .review-tooltip {
+    opacity: 1;
 }
 
 /* Animation */
@@ -1166,8 +1008,8 @@ input:checked + .toggle-slider:before {
         background: white;
         color: black;
     }
-    .bg-pattern, header, .language-tabs, .stats-bar, .main-tabs, .study-level-tabs,
-    .sheet-header, .review-header, .review-legend, .connection-status {
+    .bg-pattern, header, .language-tabs, .stats-bar, .main-tabs, 
+    .sheet-header, .review-header, .review-legend {
         display: none !important;
     }
     .sheet-container, .review-container {
@@ -1216,21 +1058,12 @@ input:checked + .toggle-slider:before {
         grid-template-columns: repeat(4, 1fr);
     }
     
-    .main-tabs, .study-level-tabs {
+    .main-tabs {
         flex-wrap: wrap;
     }
     
     .main-tab {
         padding: 0.6rem 1rem;
         font-size: 0.85rem;
-    }
-    
-    .study-tab {
-        min-width: 100px;
-        padding: 0.75rem 1rem;
-    }
-    
-    .study-tab .tab-icon {
-        font-size: 1.4rem;
     }
 }
