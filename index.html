@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Multi-Script Writing Practice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <div class="container">
+        <header>
+            <h1>✍️ Multi-Script Practice</h1>
+            <p class="subtitle">Master writing across multiple scripts</p>
+        </header>
+
+        <!-- Script Group Tabs -->
+        <div class="group-tabs" id="groupTabs">
+            <button class="group-tab active" data-group="indic">
+                <span class="group-icon">क</span>
+                <span>Indic</span>
+            </button>
+            <button class="group-tab" data-group="cjk">
+                <span class="group-icon">あ</span>
+                <span>CJK</span>
+            </button>
+        </div>
+
+        <!-- Language Tabs -->
+        <div class="language-tabs" id="languageTabs">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="practicedCount">0</div>
+                <div class="stat-label">Practiced</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="progressPercent">0%</div>
+                <div class="stat-label">Progress</div>
+            </div>
+        </div>
+
+        <!-- Main Mode Tabs -->
+        <div class="main-tabs">
+            <button class="main-tab active" data-view="practice">✏️ Practice</button>
+            <button class="main-tab" data-view="quiz">🧠 Quiz</button>
+            <button class="main-tab" data-view="sheet">📝 Sheet</button>
+            <button class="main-tab" data-view="review">📊 Review</button>
+        </div>
+
+        <!-- ========== PRACTICE VIEW ========== -->
+        <div class="view-container practice-view active" id="practiceView">
+            <div class="mode-toggle">
+                <button class="mode-btn active" data-mode="sequential">Sequential</button>
+                <button class="mode-btn" data-mode="random">Random</button>
+                <button class="mode-btn" data-mode="unpracticed">Unpracticed Only</button>
+            </div>
+
+            <div class="practice-area">
+                <!-- Character Display -->
+                <div class="character-panel fade-in">
+                    <div class="panel-title">Current Character</div>
+                    <div class="target-char" id="targetChar">က</div>
+                    <div class="char-info">
+                        <div class="romanization" id="romanization">क</div>
+                        <div class="char-description" id="charDescription">Consonant 1 of 43</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn" id="prevBtn">←</button>
+                        <button class="nav-btn" id="randomBtn">🎲</button>
+                        <button class="nav-btn" id="nextBtn">→</button>
+                    </div>
+                </div>
+
+                <!-- Canvas Area -->
+                <div class="canvas-panel fade-in">
+                    <div class="canvas-header">
+                        <span class="panel-title">Practice Writing</span>
+                        <div class="canvas-tools">
+                            <button class="tool-btn" id="undoBtn">↩ Undo</button>
+                            <button class="tool-btn" id="clearBtn">🗑 Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-container" id="practiceCanvasContainer">
+                        <canvas id="bgCanvas" class="writing-canvas"></canvas>
+                        <canvas id="guideCanvas" class="writing-canvas"></canvas>
+                        <canvas id="drawCanvas" class="writing-canvas"></canvas>
+                    </div>
+
+                    <div class="canvas-actions">
+                        <button class="action-btn secondary" id="skipBtn">Skip</button>
+                        <button class="action-btn primary" id="markDoneBtn">✓ Mark as Done</button>
+                    </div>
+
+                    <div class="stroke-control">
+                        <label>Stroke:</label>
+                        <input type="range" class="stroke-slider" id="strokeSlider" min="2" max="20" value="8">
+                        <span id="strokeValue">8px</span>
+                    </div>
+
+                    <div class="guide-toggle">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showGuide" checked>
+                            <span class="toggle-slider-switch"></span>
+                        </label>
+                        <span class="toggle-label">Show guide</span>
+                    </div>
+                </div>
+
+                <!-- Progress Panel -->
+                <div class="progress-panel fade-in">
+                    <div class="panel-title">Progress Grid</div>
+                    <div class="char-grid" id="charGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== QUIZ VIEW ========== -->
+        <div class="view-container quiz-view" id="quizView">
+            <div class="daily-target-section">
+                <div class="daily-target-header">
+                    <span>Daily Target:</span>
+                    <input type="number" class="daily-target-input" id="dailyTargetInput" value="10" min="1" max="100">
+                </div>
+                <div class="session-progress-bar">
+                    <div class="session-progress-fill" id="sessionProgress"></div>
+                </div>
+                <div class="session-progress-text">
+                    <span class="value" id="sessionCount">0</span> / <span id="sessionTarget">10</span> practiced
+                </div>
+            </div>
+
+            <div class="quiz-stats">
+                <div class="quiz-stat correct-stat"><span class="value" id="quizCorrect">0</span> Correct</div>
+                <div class="quiz-stat incorrect-stat"><span class="value" id="quizIncorrect">0</span> Wrong</div>
+                <div class="quiz-stat streak-stat"><span class="value" id="quizStreak">0</span> Streak</div>
+            </div>
+
+            <div class="mode-toggle">
+                <button class="mode-btn active" data-quiz-mode="sequential">Sequential</button>
+                <button class="mode-btn" data-quiz-mode="random">Random</button>
+                <button class="mode-btn" data-quiz-mode="mistakes">Mistakes</button>
+            </div>
+
+            <div class="practice-area">
+                <div class="character-panel fade-in">
+                    <div class="panel-title">Write this character</div>
+                    <div class="quiz-hint" id="quizRoman">ka</div>
+                    <div class="quiz-prompt" id="quizDevanagari">क</div>
+                    <div class="char-info">
+                        <div class="char-description" id="quizDescription">1 of 43</div>
+                    </div>
+                    
+                    <div class="answer-reveal" id="answerReveal">
+                        <div class="answer-label">Correct Answer:</div>
+                        <div class="answer-char" id="answerChar">က</div>
+                        <div class="result-buttons">
+                            <button class="result-btn incorrect" id="markIncorrect">✗ Wrong</button>
+                            <button class="result-btn correct" id="markCorrect">✓ Correct</button>
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="nav-btn" id="quizPrevBtn">←</button>
+                        <button class="nav-btn" id="quizRandomBtn">🎲</button>
+                        <button class="nav-btn" id="quizNextBtn">→</button>
+                    </div>
+                </div>
+
+                <div class="canvas-panel fade-in">
+                    <div class="canvas-header">
+                        <span class="panel-title">Your Answer</span>
+                        <div class="canvas-tools">
+                            <button class="tool-btn" id="quizUndoBtn">↩ Undo</button>
+                            <button class="tool-btn" id="quizClearBtn">🗑 Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-container" id="quizCanvasContainer">
+                        <canvas id="quizBgCanvas" class="writing-canvas"></canvas>
+                        <canvas id="quizGuideCanvas" class="writing-canvas"></canvas>
+                        <canvas id="quizDrawCanvas" class="writing-canvas"></canvas>
+                    </div>
+
+                    <div class="canvas-actions">
+                        <button class="action-btn secondary" id="quizSkipBtn">Skip</button>
+                        <button class="action-btn check-btn" id="checkAnswerBtn">👁 Check Answer</button>
+                    </div>
+
+                    <div class="stroke-control">
+                        <label>Stroke:</label>
+                        <input type="range" class="stroke-slider" id="quizStrokeSlider" min="2" max="20" value="8">
+                        <span id="quizStrokeValue">8px</span>
+                    </div>
+                </div>
+
+                <div class="progress-panel fade-in">
+                    <div class="panel-title">Quiz Progress</div>
+                    <div class="char-grid" id="quizCharGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== SHEET VIEW ========== -->
+        <div class="view-container sheet-view" id="sheetView">
+            <div class="sheet-container">
+                <div class="sheet-header">
+                    <div class="sheet-title">📝 Practice Sheet</div>
+                    <div class="sheet-actions">
+                        <div class="guide-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sheetShowGuide" checked>
+                                <span class="toggle-slider-switch"></span>
+                            </label>
+                            <span class="toggle-label">Show guides</span>
+                        </div>
+                        <button class="action-btn secondary" onclick="window.print()">🖨️ Print</button>
+                    </div>
+                </div>
+                
+                <!-- Sheet with writable cells -->
+                <div class="sheet-practice-area">
+                    <div class="sheet-char-display">
+                        <div class="sheet-nav">
+                            <button class="nav-btn" id="sheetPrevBtn">←</button>
+                            <span class="sheet-char-info" id="sheetCharInfo">1 / 43</span>
+                            <button class="nav-btn" id="sheetNextBtn">→</button>
+                        </div>
+                        <div class="sheet-current-char" id="sheetCurrentChar">က</div>
+                        <div class="sheet-char-label" id="sheetCharLabel">क (ka)</div>
+                    </div>
+                    
+                    <div class="sheet-canvas-panel">
+                        <div class="canvas-header">
+                            <span class="panel-title">Practice Here</span>
+                            <div class="canvas-tools">
+                                <button class="tool-btn" id="sheetUndoBtn">↩ Undo</button>
+                                <button class="tool-btn" id="sheetClearBtn">🗑 Clear</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container" id="sheetCanvasContainer">
+                            <canvas id="sheetBgCanvas" class="writing-canvas"></canvas>
+                            <canvas id="sheetGuideCanvas" class="writing-canvas"></canvas>
+                            <canvas id="sheetDrawCanvas" class="writing-canvas"></canvas>
+                        </div>
+                        <div class="canvas-actions">
+                            <button class="action-btn primary" id="sheetMarkDoneBtn">✓ Done, Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reference Grid -->
+                <div class="sheet-grid-section">
+                    <div class="panel-title">Reference Grid</div>
+                    <div class="sheet-grid" id="sheetGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== REVIEW VIEW ========== -->
+        <div class="view-container review-view" id="reviewView">
+            <div class="review-container">
+                <div class="review-header">
+                    <div class="review-title">📊 Review Chart</div>
+                    <div class="review-mode-toggle">
+                        <button class="mode-btn active" data-review-mode="last5">Last 5</button>
+                        <button class="mode-btn" data-review-mode="overall">Overall</button>
+                    </div>
+                </div>
+                
+                <div class="review-legend">
+                    <div class="legend-item"><div class="legend-color strong"></div><span>Strong (80%+)</span></div>
+                    <div class="legend-item"><div class="legend-color good"></div><span>Good (60-79%)</span></div>
+                    <div class="legend-item"><div class="legend-color medium"></div><span>Medium (40-59%)</span></div>
+                    <div class="legend-item"><div class="legend-color weak"></div><span>Weak (20-39%)</span></div>
+                    <div class="legend-item"><div class="legend-color very-weak"></div><span>Very Weak (0-19%)</span></div>
+                    <div class="legend-item"><div class="legend-color not-attempted"></div><span>Not Attempted</span></div>
+                </div>
+
+                <!-- Review with practice option -->
+                <div class="review-practice-section">
+                    <div class="review-selected-char">
+                        <div class="panel-title">Selected Character</div>
+                        <div class="review-char-display" id="reviewCharDisplay">-</div>
+                        <div class="review-char-info" id="reviewCharInfo">Click a cell to practice</div>
+                    </div>
+                    
+                    <div class="review-canvas-panel">
+                        <div class="canvas-header">
+                            <span class="panel-title">Quick Practice</span>
+                            <div class="canvas-tools">
+                                <button class="tool-btn" id="reviewUndoBtn">↩ Undo</button>
+                                <button class="tool-btn" id="reviewClearBtn">🗑 Clear</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container" id="reviewCanvasContainer">
+                            <canvas id="reviewBgCanvas" class="writing-canvas"></canvas>
+                            <canvas id="reviewGuideCanvas" class="writing-canvas"></canvas>
+                            <canvas id="reviewDrawCanvas" class="writing-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="review-grid" id="reviewGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
