@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burmese Learning App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Multi-Script Writing Practice</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -12,11 +12,23 @@
     
     <div class="container">
         <header>
-            <h1>✍️ Burmese Learning</h1>
-            <p class="subtitle">Master writing Burmese characters and words</p>
+            <h1>✍️ Multi-Script Practice</h1>
+            <p class="subtitle">Master writing across multiple scripts</p>
         </header>
 
-        <!-- Language Tabs (for future multi-language support) -->
+        <!-- Script Group Tabs -->
+        <div class="group-tabs" id="groupTabs">
+            <button class="group-tab active" data-group="indic">
+                <span class="group-icon">क</span>
+                <span>Indic</span>
+            </button>
+            <button class="group-tab" data-group="cjk">
+                <span class="group-icon">あ</span>
+                <span>CJK</span>
+            </button>
+        </div>
+
+        <!-- Language Tabs -->
         <div class="language-tabs" id="languageTabs">
             <!-- Populated by JS -->
         </div>
@@ -37,27 +49,7 @@
             </div>
         </div>
 
-        <!-- Main Study Level Tabs -->
-        <div class="study-level-tabs">
-            <button class="study-tab active" data-level="consonant">
-                <span class="tab-icon">က</span>
-                <span class="tab-label">C (Consonants)</span>
-            </button>
-            <button class="study-tab" data-level="cv">
-                <span class="tab-icon">ကာ</span>
-                <span class="tab-label">C+V (Combinations)</span>
-            </button>
-            <button class="study-tab" data-level="word">
-                <span class="tab-icon">စကား</span>
-                <span class="tab-label">Word</span>
-            </button>
-            <button class="study-tab disabled" data-level="sentence" title="Coming soon">
-                <span class="tab-icon">📝</span>
-                <span class="tab-label">Sentence</span>
-            </button>
-        </div>
-
-        <!-- Mode Tabs (Practice/Quiz/Sheet/Review) -->
+        <!-- Main Mode Tabs -->
         <div class="main-tabs">
             <button class="main-tab active" data-view="practice">✏️ Practice</button>
             <button class="main-tab" data-view="quiz">🧠 Quiz</button>
@@ -66,52 +58,21 @@
         </div>
 
         <!-- ========== PRACTICE VIEW ========== -->
-        <div class="practice-view active" id="practiceView">
-            <!-- Mode Toggle -->
+        <div class="view-container practice-view active" id="practiceView">
             <div class="mode-toggle">
                 <button class="mode-btn active" data-mode="sequential">Sequential</button>
                 <button class="mode-btn" data-mode="random">Random</button>
                 <button class="mode-btn" data-mode="unpracticed">Unpracticed Only</button>
             </div>
 
-            <!-- Word Level Filter (shown only for word level) -->
-            <div class="word-filters" id="wordFilters" style="display: none;">
-                <div class="filter-group">
-                    <label>Group by:</label>
-                    <select id="wordGroupBy">
-                        <option value="anchor">Anchor Words</option>
-                        <option value="consonant">Consonant</option>
-                        <option value="category">Category</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Anchor:</label>
-                    <select id="anchorFilter">
-                        <option value="">All Anchors</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Category:</label>
-                    <select id="categoryFilter">
-                        <option value="">All Categories</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Main Practice Area -->
             <div class="practice-area">
                 <!-- Character Display -->
                 <div class="character-panel fade-in">
-                    <div class="canvas-title" id="practiceTitle">Current Character</div>
-                    <div class="target-char burmese" id="targetChar">က</div>
+                    <div class="panel-title">Current Character</div>
+                    <div class="target-char" id="targetChar">က</div>
                     <div class="char-info">
-                        <div class="romanization devanagari" id="romanization">क</div>
-                        <div id="charDescription">Consonant 1 of 33</div>
-                        <!-- Word meaning (shown for word level) -->
-                        <div class="word-meaning" id="wordMeaning" style="display: none;">
-                            <div class="meaning-text" id="meaningText"></div>
-                            <div class="hint-text" id="hintText"></div>
-                        </div>
+                        <div class="romanization" id="romanization">क</div>
+                        <div class="char-description" id="charDescription">Consonant 1 of 43</div>
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn" id="prevBtn">←</button>
@@ -121,16 +82,16 @@
                 </div>
 
                 <!-- Canvas Area -->
-                <div class="canvas-panel fade-in" style="animation-delay: 0.1s;">
+                <div class="canvas-panel fade-in">
                     <div class="canvas-header">
-                        <span class="canvas-title">Practice Writing</span>
+                        <span class="panel-title">Practice Writing</span>
                         <div class="canvas-tools">
                             <button class="tool-btn" id="undoBtn">↩ Undo</button>
                             <button class="tool-btn" id="clearBtn">🗑 Clear</button>
                         </div>
                     </div>
                     
-                    <div class="canvas-container">
+                    <div class="canvas-container" id="practiceCanvasContainer">
                         <canvas id="bgCanvas" class="writing-canvas"></canvas>
                         <canvas id="guideCanvas" class="writing-canvas"></canvas>
                         <canvas id="drawCanvas" class="writing-canvas"></canvas>
@@ -142,7 +103,7 @@
                     </div>
 
                     <div class="stroke-control">
-                        <label>Stroke Width:</label>
+                        <label>Stroke:</label>
                         <input type="range" class="stroke-slider" id="strokeSlider" min="2" max="20" value="8">
                         <span id="strokeValue">8px</span>
                     </div>
@@ -150,98 +111,84 @@
                     <div class="guide-toggle">
                         <label class="toggle-switch">
                             <input type="checkbox" id="showGuide" checked>
-                            <span class="toggle-slider"></span>
+                            <span class="toggle-slider-switch"></span>
                         </label>
-                        <span class="toggle-label">Show guide character</span>
+                        <span class="toggle-label">Show guide</span>
                     </div>
                 </div>
 
                 <!-- Progress Panel -->
-                <div class="progress-panel fade-in" style="animation-delay: 0.2s;">
-                    <div class="progress-title">Progress Grid</div>
-                    <div class="char-grid" id="charGrid">
-                        <!-- Populated by JS -->
-                    </div>
+                <div class="progress-panel fade-in">
+                    <div class="panel-title">Progress Grid</div>
+                    <div class="char-grid" id="charGrid"></div>
                 </div>
             </div>
         </div>
 
         <!-- ========== QUIZ VIEW ========== -->
-        <div class="quiz-view" id="quizView">
-            <!-- Daily Target Section -->
+        <div class="view-container quiz-view" id="quizView">
             <div class="daily-target-section">
                 <div class="daily-target-header">
-                    <span class="daily-target-label">Daily Target:</span>
+                    <span>Daily Target:</span>
                     <input type="number" class="daily-target-input" id="dailyTargetInput" value="10" min="1" max="100">
                 </div>
                 <div class="session-progress-bar">
                     <div class="session-progress-fill" id="sessionProgress"></div>
                 </div>
                 <div class="session-progress-text">
-                    <span class="value" id="sessionCount">0</span> / <span id="sessionTarget">10</span> characters practiced
+                    <span class="value" id="sessionCount">0</span> / <span id="sessionTarget">10</span> practiced
                 </div>
             </div>
 
-            <!-- Quiz Stats -->
             <div class="quiz-stats">
-                <div class="quiz-stat correct-stat">
-                    <span class="value" id="quizCorrect">0</span>Correct
-                </div>
-                <div class="quiz-stat incorrect-stat">
-                    <span class="value" id="quizIncorrect">0</span>Incorrect
-                </div>
-                <div class="quiz-stat streak-stat">
-                    <span class="value" id="quizStreak">0</span>Streak
-                </div>
+                <div class="quiz-stat correct-stat"><span class="value" id="quizCorrect">0</span> Correct</div>
+                <div class="quiz-stat incorrect-stat"><span class="value" id="quizIncorrect">0</span> Wrong</div>
+                <div class="quiz-stat streak-stat"><span class="value" id="quizStreak">0</span> Streak</div>
             </div>
 
-            <!-- Quiz Mode Toggle -->
             <div class="mode-toggle">
                 <button class="mode-btn active" data-quiz-mode="sequential">Sequential</button>
                 <button class="mode-btn" data-quiz-mode="random">Random</button>
-                <button class="mode-btn" data-quiz-mode="mistakes">Review Mistakes</button>
+                <button class="mode-btn" data-quiz-mode="mistakes">Mistakes</button>
             </div>
 
-            <!-- Quiz Practice Area -->
             <div class="practice-area">
-                <!-- Quiz Prompt -->
                 <div class="character-panel fade-in">
-                    <div class="canvas-title">Write this character</div>
+                    <div class="panel-title">Write this character</div>
                     <div class="quiz-hint" id="quizRoman">ka</div>
-                    <div class="quiz-prompt devanagari" id="quizDevanagari">क</div>
+                    <div class="quiz-prompt" id="quizDevanagari">क</div>
                     <div class="char-info">
-                        <div id="quizDescription">Character 1 of 33</div>
+                        <div class="char-description" id="quizDescription">1 of 43</div>
                     </div>
                     
-                    <!-- Answer Reveal -->
                     <div class="answer-reveal" id="answerReveal">
                         <div class="answer-label">Correct Answer:</div>
-                        <div class="answer-char burmese" id="answerChar">က</div>
+                        <div class="answer-char" id="answerChar">က</div>
                         <div class="result-buttons">
                             <button class="result-btn incorrect" id="markIncorrect">✗ Wrong</button>
                             <button class="result-btn correct" id="markCorrect">✓ Correct</button>
                         </div>
                     </div>
 
-                    <div class="nav-buttons" id="quizNavButtons">
+                    <div class="nav-buttons">
                         <button class="nav-btn" id="quizPrevBtn">←</button>
                         <button class="nav-btn" id="quizRandomBtn">🎲</button>
                         <button class="nav-btn" id="quizNextBtn">→</button>
                     </div>
                 </div>
 
-                <!-- Quiz Canvas Area -->
-                <div class="canvas-panel fade-in" style="animation-delay: 0.1s;">
+                <div class="canvas-panel fade-in">
                     <div class="canvas-header">
-                        <span class="canvas-title">Your Answer</span>
+                        <span class="panel-title">Your Answer</span>
                         <div class="canvas-tools">
                             <button class="tool-btn" id="quizUndoBtn">↩ Undo</button>
                             <button class="tool-btn" id="quizClearBtn">🗑 Clear</button>
                         </div>
                     </div>
                     
-                    <div class="canvas-container">
+                    <div class="canvas-container" id="quizCanvasContainer">
                         <canvas id="quizBgCanvas" class="writing-canvas"></canvas>
+                        <canvas id="quizGuideCanvas" class="writing-canvas"></canvas>
                         <canvas id="quizDrawCanvas" class="writing-canvas"></canvas>
                     </div>
 
@@ -251,109 +198,120 @@
                     </div>
 
                     <div class="stroke-control">
-                        <label>Stroke Width:</label>
+                        <label>Stroke:</label>
                         <input type="range" class="stroke-slider" id="quizStrokeSlider" min="2" max="20" value="8">
                         <span id="quizStrokeValue">8px</span>
                     </div>
                 </div>
 
-                <!-- Quiz Progress Panel -->
-                <div class="progress-panel fade-in" style="animation-delay: 0.2s;">
-                    <div class="progress-title">Quiz Progress</div>
-                    <div class="char-grid" id="quizCharGrid">
-                        <!-- Populated by JS -->
-                    </div>
+                <div class="progress-panel fade-in">
+                    <div class="panel-title">Quiz Progress</div>
+                    <div class="char-grid" id="quizCharGrid"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ========== PRACTICE SHEET VIEW ========== -->
-        <div class="sheet-view" id="sheetView">
+        <!-- ========== SHEET VIEW ========== -->
+        <div class="view-container sheet-view" id="sheetView">
             <div class="sheet-container">
                 <div class="sheet-header">
                     <div class="sheet-title">📝 Practice Sheet</div>
                     <div class="sheet-actions">
-                        <div class="guide-toggle" style="margin: 0;">
+                        <div class="guide-toggle">
                             <label class="toggle-switch">
                                 <input type="checkbox" id="sheetShowGuide" checked>
-                                <span class="toggle-slider"></span>
+                                <span class="toggle-slider-switch"></span>
                             </label>
-                            <span class="toggle-label">Show ghost characters</span>
+                            <span class="toggle-label">Show guides</span>
                         </div>
                         <button class="action-btn secondary" onclick="window.print()">🖨️ Print</button>
                     </div>
                 </div>
-                <div class="sheet-grid" id="sheetGrid">
-                    <!-- Populated by JS -->
+                
+                <!-- Sheet with writable cells -->
+                <div class="sheet-practice-area">
+                    <div class="sheet-char-display">
+                        <div class="sheet-nav">
+                            <button class="nav-btn" id="sheetPrevBtn">←</button>
+                            <span class="sheet-char-info" id="sheetCharInfo">1 / 43</span>
+                            <button class="nav-btn" id="sheetNextBtn">→</button>
+                        </div>
+                        <div class="sheet-current-char" id="sheetCurrentChar">က</div>
+                        <div class="sheet-char-label" id="sheetCharLabel">क (ka)</div>
+                    </div>
+                    
+                    <div class="sheet-canvas-panel">
+                        <div class="canvas-header">
+                            <span class="panel-title">Practice Here</span>
+                            <div class="canvas-tools">
+                                <button class="tool-btn" id="sheetUndoBtn">↩ Undo</button>
+                                <button class="tool-btn" id="sheetClearBtn">🗑 Clear</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container" id="sheetCanvasContainer">
+                            <canvas id="sheetBgCanvas" class="writing-canvas"></canvas>
+                            <canvas id="sheetGuideCanvas" class="writing-canvas"></canvas>
+                            <canvas id="sheetDrawCanvas" class="writing-canvas"></canvas>
+                        </div>
+                        <div class="canvas-actions">
+                            <button class="action-btn primary" id="sheetMarkDoneBtn">✓ Done, Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reference Grid -->
+                <div class="sheet-grid-section">
+                    <div class="panel-title">Reference Grid</div>
+                    <div class="sheet-grid" id="sheetGrid"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ========== REVIEW CHART VIEW ========== -->
-        <div class="review-view" id="reviewView">
+        <!-- ========== REVIEW VIEW ========== -->
+        <div class="view-container review-view" id="reviewView">
             <div class="review-container">
                 <div class="review-header">
                     <div class="review-title">📊 Review Chart</div>
                     <div class="review-mode-toggle">
-                        <button class="mode-btn active" data-review-mode="last5">Last 5 Attempts</button>
+                        <button class="mode-btn active" data-review-mode="last5">Last 5</button>
                         <button class="mode-btn" data-review-mode="overall">Overall</button>
                     </div>
                 </div>
+                
                 <div class="review-legend">
-                    <div class="legend-item">
-                        <div class="legend-color strong"></div>
-                        <span>Strong (80-100%)</span>
+                    <div class="legend-item"><div class="legend-color strong"></div><span>Strong (80%+)</span></div>
+                    <div class="legend-item"><div class="legend-color good"></div><span>Good (60-79%)</span></div>
+                    <div class="legend-item"><div class="legend-color medium"></div><span>Medium (40-59%)</span></div>
+                    <div class="legend-item"><div class="legend-color weak"></div><span>Weak (20-39%)</span></div>
+                    <div class="legend-item"><div class="legend-color very-weak"></div><span>Very Weak (0-19%)</span></div>
+                    <div class="legend-item"><div class="legend-color not-attempted"></div><span>Not Attempted</span></div>
+                </div>
+
+                <!-- Review with practice option -->
+                <div class="review-practice-section">
+                    <div class="review-selected-char">
+                        <div class="panel-title">Selected Character</div>
+                        <div class="review-char-display" id="reviewCharDisplay">-</div>
+                        <div class="review-char-info" id="reviewCharInfo">Click a cell to practice</div>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-color good"></div>
-                        <span>Good (60-79%)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color medium"></div>
-                        <span>Medium (40-59%)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color weak"></div>
-                        <span>Weak (20-39%)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color very-weak"></div>
-                        <span>Very Weak (0-19%)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color not-attempted"></div>
-                        <span>Not Attempted</span>
+                    
+                    <div class="review-canvas-panel">
+                        <div class="canvas-header">
+                            <span class="panel-title">Quick Practice</span>
+                            <div class="canvas-tools">
+                                <button class="tool-btn" id="reviewUndoBtn">↩ Undo</button>
+                                <button class="tool-btn" id="reviewClearBtn">🗑 Clear</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container" id="reviewCanvasContainer">
+                            <canvas id="reviewBgCanvas" class="writing-canvas"></canvas>
+                            <canvas id="reviewGuideCanvas" class="writing-canvas"></canvas>
+                            <canvas id="reviewDrawCanvas" class="writing-canvas"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div class="review-grid" id="reviewGrid">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-        </div>
 
-        <!-- Connection Status -->
-        <div class="connection-status" id="connectionStatus">
-            <span class="status-dot"></span>
-            <span class="status-text">Offline Mode</span>
-        </div>
-    </div>
-
-    <!-- Supabase Config Modal -->
-    <div class="modal" id="supabaseModal" style="display: none;">
-        <div class="modal-content">
-            <h3>🔗 Connect to Supabase</h3>
-            <p>Enter your Supabase credentials to enable Word learning from database:</p>
-            <div class="form-group">
-                <label>Project URL:</label>
-                <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co">
-            </div>
-            <div class="form-group">
-                <label>Anon Key:</label>
-                <input type="text" id="supabaseKey" placeholder="eyJ...">
-            </div>
-            <div class="modal-actions">
-                <button class="action-btn secondary" onclick="closeSupabaseModal()">Cancel</button>
-                <button class="action-btn primary" onclick="connectSupabase()">Connect</button>
+                <div class="review-grid" id="reviewGrid"></div>
             </div>
         </div>
     </div>
